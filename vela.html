@@ -2,19 +2,19 @@
 <html lang="fa">
 <head>
 <meta charset="UTF-8">
-<title>Vela - TSE Debug</title>
+<title>Vela - Bors Ratio</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{width:100%;height:100%;overflow:hidden;background:#131722}
   #chart{width:100%;height:100vh}
-  #log{position:fixed;top:10px;left:10px;background:rgba(0,0,0,.9);padding:12px;border-radius:6px;
-    font-size:11px;font-family:monospace;max-width:450px;max-height:90vh;overflow:auto;z-index:99;
-    white-space:pre-wrap;color:#aed581;direction:ltr;text-align:left}
+  #log{position:fixed;top:10px;left:10px;background:rgba(0,0,0,.9);padding:10px;border-radius:6px;
+    font-size:11px;font-family:monospace;max-width:420px;z-index:99;white-space:pre-wrap;
+    color:#aed581;direction:ltr}
 </style>
 </head>
 <body>
 <div id="chart"></div>
-<div id="log">starting...</div>
+<div id="log">loading...</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@luxalgo/vela@latest/dist/vela.global.min.js"></script>
 
@@ -22,30 +22,12 @@
 (function(){
   var log = function(m){ document.getElementById('log').innerHTML += '\n' + m; };
   var API = 'https://cdn.tsetmc.com';
-
-  function fetchWithTimeout(url, ms){
-    return new Promise(function(resolve, reject){
-      var controller = new AbortController();
-      var timer = setTimeout(function(){
-        controller.abort();
-        reject(new Error('TIMEOUT after ' + ms + 'ms'));
-      }, ms);
-      fetch(url, { signal: controller.signal })
-        .then(function(r){
-          clearTimeout(timer);
-          log('   status: ' + r.status);
-          resolve(r);
-        })
-        .catch(function(e){
-          clearTimeout(timer);
-          log('   fetch err: ' + e.message);
-          reject(e);
-        });
-    });
-  }
+  var PROXY = 'https://tsetmc-proxy.mhdirasoli.workers.dev/?url=';
 
   async function fetchJSON(url){
-    var r = await fetchWithTimeout(url, 8000);
+    log('  fetch: ' + url.substring(20, 70));
+    var r = await fetch(PROXY + encodeURIComponent(url));
+    log('  status: ' + r.status);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.json();
   }
@@ -58,94 +40,58 @@
     return Math.floor(new Date(y, m-1, d).getTime() / 1000);
   }
 
-  async function getInsCode(symbol){
-    log('▶ getInsCode: ' + symbol);
-    var url = API + '/api/Instrument/GetInstrumentSearch/' + encodeURIComponent(symbol);
-    log('   url: ' + url.substring(0, 100));
-    var d = await fetchJSON(url);
-    log('   received');
-    var code = d.instrumentSearch && d.instrumentSearch[0] ? d.instrumentSearch[0].insCode : null;
-    log('   code: ' + code);
-    return code;
+  async function getInsCode(s){
+    log('code: ' + s);
+    var d = await fetchJSON(API + '/api/Instrument/GetInstrumentSearch/' + encodeURIComponent(s));
+    return d.instrumentSearch && d.instrumentSearch[0] ? d.instrumentSearch[0].insCode : null;
   }
 
   async function getHistory(code){
-    log('▶ getHistory: ' + code);
-    var url = API + '/api/ClosingPrice/GetClosingPriceDailyList/' + code + '/0';
-    var d = await fetchJSON(url);
-    var list = d.closingPriceDaily || d.closingPrice || [];
-    log('   records: ' + list.length);
-    return list;
+    var d = await fetchJSON(API + '/api/ClosingPrice/GetClosingPriceDailyList/' + code + '/0');
+    return d.closingPriceDaily || d.closingPrice || [];
   }
 
   async function buildRatio(s1, s2){
-    log('=== BUILD RATIO ===');
+    log('ratio: ' + s1 + '/' + s2);
     var c1 = await getInsCode(s1);
     var c2 = await getInsCode(s2);
-    if (!c1 || !c2) throw new Error('نماد پیدا نشد');
+    log('c1: ' + c1 + ' c2: ' + c2);
+    if (!c1 || !c2) throw new Error('not found');
 
     var h1 = await getHistory(c1);
     var h2 = await getHistory(c2);
+    log('h1: ' + h1.length + ' h2: ' + h2.length);
 
     var m1 = {}, m2 = {};
-    h1.forEach(function(x){
-      var c = x.pClosing || x.pDrCotVal;
-      if (c > 0) m1[String(x.dEven)] = c;
-    });
-    h2.forEach(function(x){
-      var c = x.pClosing || x.pDrCotVal;
-      if (c > 0) m2[String(x.dEven)] = c;
-    });
+    h1.forEach(function(x){ var c = x.pClosing || x.pDrCotVal; if (c>0) m1[String(x.dEven)] = c; });
+    h2.forEach(function(x){ var c = x.pClosing || x.pDrCotVal; if (c>0) m2[String(x.dEven)] = c; });
 
     var dates = Object.keys(m1).filter(function(d){ return m2[d]; }).sort();
-    log('common dates: ' + dates.length);
+    log('dates: ' + dates.length);
 
-    var bars = [], prevClose = null;
-    for (var i = 0; i < dates.length; i++){
-      var d = dates[i];
-      var ts = dateToTs(d);
+    var bars = [], pc = null;
+    for (var i=0; i<dates.length; i++){
+      var d = dates[i], ts = dateToTs(d);
       if (ts === null) continue;
-      var rClose = m1[d] / m2[d];
-      var rOpen = prevClose !== null ? prevClose : rClose;
-      bars.push({
-        time: ts * 1000,
-        open: rOpen,
-        high: Math.max(rOpen, rClose),
-        low: Math.min(rOpen, rClose),
-        close: rClose,
-        volume: 0
-      });
-      prevClose = rClose;
+      var rc = m1[d]/m2[d];
+      var ro = pc !== null ? pc : rc;
+      bars.push({ time: ts*1000, open: ro, high: Math.max(ro,rc), low: Math.min(ro,rc), close: rc, volume: 0 });
+      pc = rc;
     }
     log('bars: ' + bars.length);
     return bars;
   }
 
   window.addEventListener('DOMContentLoaded', async function(){
-    log('=== DOM READY ===');
-    log('Vela type: ' + typeof window.Vela);
-    if (typeof window.Vela === 'undefined'){
-      log('❌ Vela not loaded');
-      return;
-    }
-    var VelaClass = window.Vela.Vela || window.Vela;
-    if (typeof VelaClass !== 'function'){ log('❌ no constructor'); return; }
-
+    if (typeof window.Vela === 'undefined'){ log('NO VELA'); return; }
+    var VC = window.Vela.Vela || window.Vela;
     try {
       var bars = await buildRatio('شیراز', 'شپدیس');
-      if (!bars.length) { log('❌ NO DATA'); return; }
-
-      log('=== CHART INIT ===');
-      var chart = new VelaClass('#chart', {
-        data: bars,
-        timeframe: '1D',
-        theme: 'dark',
-        priceStyle: 'candles'
-      });
-      log('🎉 CHART OK');
+      if (!bars.length){ log('NO DATA'); return; }
+      new VC('#chart', { data: bars, timeframe: '1D', theme: 'dark', priceStyle: 'candles' });
+      log('OK');
     } catch(e){
-      log('❌ ERR: ' + e.message);
-      console.error(e);
+      log('ERR: ' + e.message);
     }
   });
 })();
