@@ -14,8 +14,9 @@ input,button{padding:10px 15px;border:1px solid #ddd;border-radius:5px;font-size
 button{background:#4CAF50;color:white;border:none;cursor:pointer}
 button:hover{background:#45a049}
 #chart{width:100%;height:600px;border:1px solid #eee;border-radius:5px}
-#log{background:#f5f5f5;padding:10px;margin-bottom:15px;font-family:monospace;font-size:12px;border-radius:5px;white-space:pre-wrap;display:none;max-height:200px;overflow:auto}
+#log{background:#f5f5f5;padding:10px;margin-bottom:15px;font-family:monospace;font-size:12px;border-radius:5px;white-space:pre-wrap;display:none;max-height:150px;overflow:auto}
 #log.active{display:block}
+#info{text-align:center;color:#666;font-size:13px;margin-bottom:10px;min-height:20px}
 </style>
 </head>
 <body>
@@ -27,11 +28,49 @@ button:hover{background:#45a049}
 <input type="text" id="symbol2" value="شپدیس" placeholder="نماد دوم">
 <button onclick="loadRatio()">مقایسه کن</button>
 </div>
+<div id="info"></div>
 <div id="log"></div>
 <div id="chart"></div>
 </div>
 
 <script>
+// ===== تبدیل دقیق تاریخ شمسی به میلادی =====
+function jalaliToGregorian(jy, jm, jd) {
+  jy += 1595;
+  let days = -355668 + (365 * jy) + (Math.floor(jy / 33) * 8) + Math.floor(((jy % 33) + 3) / 4) + jd + ((jm < 7) ? (jm - 1) * 31 : ((jm - 7) * 30) + 186);
+  let gy = 400 * Math.floor(days / 146097);
+  days %= 146097;
+  if (days > 36524) {
+    gy += 100 * Math.floor(--days / 36524);
+    days %= 36524;
+    if (days >= 365) days++;
+  }
+  gy += 4 * Math.floor(days / 1461);
+  days %= 1461;
+  if (days > 365) {
+    gy += Math.floor((days - 1) / 365);
+    days = (days - 1) % 365;
+  }
+  let gd = days + 1;
+  const isLeap = (gy % 4 === 0 && gy % 100 !== 0) || (gy % 400 === 0);
+  const sal_a = [0, 31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  let gm;
+  for (gm = 0; gm < 13 && gd > sal_a[gm]; gm++) gd -= sal_a[gm];
+  return [gy, gm, gd];
+}
+
+function jalaliStringToTimestamp(s){
+  s = String(s);
+  if(s.length !== 8) return null;
+  const jy = parseInt(s.substring(0,4));
+  const jm = parseInt(s.substring(4,6));
+  const jd = parseInt(s.substring(6,8));
+  if(jy < 1300 || jy > 1500 || jm < 1 || jm > 12 || jd < 1 || jd > 31) return null;
+  const [gy, gm, gd] = jalaliToGregorian(jy, jm, jd);
+  return Math.floor(new Date(gy, gm - 1, gd).getTime() / 1000);
+}
+
+// ===== لاگ =====
 const log = m => {
   const el = document.getElementById('log');
   el.classList.add('active');
@@ -45,23 +84,36 @@ async function fetchJSON(url){
   return await res.json();
 }
 
+// ===== گرفتن InsCode =====
 async function getInsCode(sym){
-  log('🔍 جستجوی: ' + sym);
+  log('🔍 جستجو: ' + sym);
   const d = await fetchJSON('https://cdn.tsetmc.com/api/Instrument/GetInstrumentSearch/' + encodeURIComponent(sym));
   const code = d.instrumentSearch?.[0]?.insCode;
   log('  InsCode: ' + code);
   return code;
 }
 
+// ===== گرفتن تاریخچه (با قیمت تعدیل‌شده) =====
 async function getHistory(code){
-  log('📊 تاریخچه: ' + code);
-  const d = await fetchJSON('https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDailyList/' + code + '/0');
-  const list = d.closingPrice || d.closingPriceDaily || [];
-  log('  رکورد: ' + list.length);
+  log('📊 دریافت تاریخچه تعدیل‌شده: ' + code);
+  // ابتدا تلاش برای دریافت قیمت تعدیل‌شده (پارامتر 1)
+  let list = [];
+  try {
+    const d = await fetchJSON('https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDailyList/' + code + '/1');
+    list = d.closingPrice || d.closingPriceDaily || [];
+    log('  تعدیل‌شده: ' + list.length + ' رکورد');
+  } catch(e){ log('  ⚠️ تعدیل‌شده ناموفق'); }
+
+  // اگر تعدیل‌شده خالی بود، از حالت عادی استفاده کن
+  if(!list.length){
+    const d = await fetchJSON('https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDailyList/' + code + '/0');
+    list = d.closingPrice || d.closingPriceDaily || [];
+    log('  تعدیل‌نشده: ' + list.length + ' رکورد');
+  }
   return list;
 }
 
-let chart, line;
+let chart, ratioSeries, maSeries;
 
 function initChart(){
   const container = document.getElementById('chart');
@@ -71,52 +123,100 @@ function initChart(){
     height: 600,
     layout: { background: { color: '#ffffff' }, textColor: '#333' },
     grid: { vertLines: { color: '#f0f3fa' }, horzLines: { color: '#f0f3fa' } },
-    timeScale: { timeVisible: true, secondsVisible: false }
+    timeScale: { timeVisible: true, secondsVisible: false },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
   });
-  line = chart.addLineSeries({ color: '#2962FF', lineWidth: 2 });
+  // خط نسبت
+  ratioSeries = chart.addLineSeries({ color: '#2962FF', lineWidth: 2, title: 'نسبت' });
+  // خط میانگین متحرک ۵۰ روزه
+  maSeries = chart.addLineSeries({ color: '#FF6D00', lineWidth: 1, title: 'MA50' });
+}
+
+// محاسبه میانگین متحرک
+function calcMA(data, period){
+  const result = [];
+  for(let i = period - 1; i < data.length; i++){
+    let sum = 0;
+    for(let j = 0; j < period; j++) sum += data[i - j].value;
+    result.push({ time: data[i].time, value: sum / period });
+  }
+  return result;
 }
 
 async function loadRatio(){
   document.getElementById('log').innerHTML = '';
+  document.getElementById('info').innerText = 'در حال دریافت داده...';
   try {
-    const s1 = document.getElementById('symbol1').value;
-    const s2 = document.getElementById('symbol2').value;
+    const s1 = document.getElementById('symbol1').value.trim();
+    const s2 = document.getElementById('symbol2').value.trim();
 
     const c1 = await getInsCode(s1);
     const c2 = await getInsCode(s2);
-    if(!c1 || !c2){ log('❌ نماد پیدا نشد'); return; }
+    if(!c1 || !c2){ log('❌ نماد پیدا نشد'); document.getElementById('info').innerText = 'نماد پیدا نشد'; return; }
 
     const h1 = await getHistory(c1);
     const h2 = await getHistory(c2);
-    if(!h1.length || !h2.length){ log('❌ داده خالی'); return; }
+    if(!h1.length || !h2.length){ log('❌ داده خالی'); document.getElementById('info').innerText = 'داده خالی'; return; }
 
+    // ساخت نقشه تاریخ → قیمت پایانی (با فیلتر مقادیر نامعتبر)
     const m1 = {}, m2 = {};
-    h1.forEach(x => m1[x.dEven] = x.pClosing || x.pDrCotVal);
-    h2.forEach(x => m2[x.dEven] = x.pClosing || x.pDrCotVal);
-
-    const dates = Object.keys(m1).filter(d => m2[d]).sort((a,b) => a - b);
-    log('✅ تاریخ مشترک: ' + dates.length);
-
-    const ratios = dates.map(d => {
-      const s = String(d);
-      const ts = Math.floor(new Date(parseInt(s.substring(0,4)), parseInt(s.substring(4,6))-1, parseInt(s.substring(6,8))).getTime()/1000);
-      return { time: ts, value: m1[d] / m2[d] };
+    h1.forEach(x => {
+      const p = x.pClosing || x.pDrCotVal;
+      if(p && p > 0) m1[String(x.dEven)] = p;
+    });
+    h2.forEach(x => {
+      const p = x.pClosing || x.pDrCotVal;
+      if(p && p > 0) m2[String(x.dEven)] = p;
     });
 
+    // تاریخ‌های مشترک با تبدیل دقیق
+    const dates = Object.keys(m1).filter(d => m2[d]).sort();
+    log('✅ تاریخ مشترک: ' + dates.length);
+
+    const ratios = [];
+    for(const d of dates){
+      const ts = jalaliStringToTimestamp(d);
+      if(ts === null) continue;
+      ratios.push({ time: ts, value: m1[d] / m2[d] });
+    }
+
+    // حذف تاریخ‌های تکراری (یک timestamp ممکن است چندبار بیاید)
+    const unique = {};
+    ratios.forEach(r => unique[r.time] = r);
+    const finalRatios = Object.values(unique).sort((a,b) => a.time - b.time);
+
+    if(finalRatios.length < 2){
+      log('❌ داده کافی برای رسم وجود ندارد');
+      document.getElementById('info').innerText = 'داده کافی نیست';
+      return;
+    }
+
+    // اطلاعات خلاصه
+    const first = finalRatios[0].value;
+    const last = finalRatios[finalRatios.length-1].value;
+    const change = ((last - first) / first * 100).toFixed(2);
+    document.getElementById('info').innerHTML =
+      'تعداد نقاط: ' + finalRatios.length +
+      ' | نسبت فعلی: ' + last.toFixed(4) +
+      ' | تغییر از ابتدا: ' + change + '%';
+
+    // رسم
     initChart();
-    line.setData(ratios);
+    ratioSeries.setData(finalRatios);
+    if(finalRatios.length > 50){
+      maSeries.setData(calcMA(finalRatios, 50));
+    }
     chart.timeScale().fitContent();
     log('🎉 نمودار رسم شد!');
 
   } catch(e) {
     log('❌ خطا: ' + e.message);
+    document.getElementById('info').innerText = 'خطا: ' + e.message;
   }
 }
 
 window.addEventListener('resize', () => {
-  if(chart){
-    chart.applyOptions({ width: document.getElementById('chart').clientWidth });
-  }
+  if(chart) chart.applyOptions({ width: document.getElementById('chart').clientWidth });
 });
 
 window.onload = loadRatio;
