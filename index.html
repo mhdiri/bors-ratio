@@ -1,87 +1,125 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نسبت‌سنجی سهام بورس ایران</title>
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-    <style>
-        body { font-family: Tahoma, Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #333; }
-        .controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
-        input, button { padding: 10px 15px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
-        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #45a049; }
-        #chart { width: 100%; height: 600px; border: 1px solid #eee; border-radius: 5px; }
-        #error-box { display: none; background: #ffebee; color: #c62828; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #ef9a9a; word-break: break-all; font-size: 14px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نسبت‌سنجی سهام بورس ایران</title>
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+body{font-family:Tahoma,Arial;background:#f4f6f9;margin:0;padding:20px}
+.container{max-width:1200px;margin:0 auto;background:white;padding:20px;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1)}
+h1{text-align:center;color:#333}
+.controls{display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap}
+input,button{padding:10px 15px;border:1px solid #ddd;border-radius:5px;font-size:16px}
+button{background:#4CAF50;color:white;border:none;cursor:pointer}
+button:hover{background:#45a049}
+#chart{width:100%;height:600px;border:1px solid #eee;border-radius:5px}
+#log{background:#f5f5f5;padding:10px;margin-bottom:15px;font-family:monospace;font-size:12px;border-radius:5px;white-space:pre-wrap;display:none}
+#log.active{display:block}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>نسبت‌سنجی دو سهم بورس ایران</h1>
-        <div class="controls">
-            <input type="text" id="symbol1" value="شیراز" placeholder="نماد اول">
-            <span style="display: flex; align-items: center; font-weight: bold;">/</span>
-            <input type="text" id="symbol2" value="شپدیس" placeholder="نماد دوم">
-            <button onclick="loadRatio()">مقایسه کن</button>
-        </div>
-        <div id="error-box"></div>
-        <div id="chart"></div>
-    </div>
+<div class="container">
+<h1>نسبت‌سنجی دو سهم بورس ایران</h1>
+<div class="controls">
+<input type="text" id="symbol1" value="شیراز" placeholder="نماد اول">
+<span style="display:flex;align-items:center;font-weight:bold">/</span>
+<input type="text" id="symbol2" value="شپدیس" placeholder="نماد دوم">
+<button onclick="loadRatio()">مقایسه کن</button>
+</div>
+<div id="log"></div>
+<div id="chart"></div>
+</div>
 
-    <script>
-        let chart;
-        let lineSeries;
+<script>
+const log = m => {
+  const el = document.getElementById('log');
+  el.classList.add('active');
+  el.innerHTML += m + '\n';
+};
 
-        function initChart() {
-            chart = LightweightCharts.createChart(document.getElementById('chart'), {
-                width: document.getElementById('chart').clientWidth,
-                height: 600,
-                layout: { background: { color: '#ffffff' }, textColor: '#333' },
-                grid: { vertLines: { color: '#f0f3fa' }, horzLines: { color: '#f0f3fa' } },
-                crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-                timeScale: { timeVisible: true, secondsVisible: false }
-            });
-            lineSeries = chart.addLineSeries({ color: '#2962FF', lineWidth: 2 });
-        }
+async function fetchJSON(url){
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json();
+}
 
-        async function loadRatio() {
-            const errorBox = document.getElementById('error-box');
-            errorBox.style.display = 'none';
+async function getInsCode(sym){
+  log('🔍 جستجوی: ' + sym);
+  const d = await fetchJSON('https://cdn.tsetmc.com/api/Instrument/GetInstrumentSearch/' + encodeURIComponent(sym));
+  const code = d.instrumentSearch?.[0]?.insCode;
+  log('  InsCode: ' + code);
+  return code;
+}
 
-            const symbol1 = document.getElementById('symbol1').value;
-            const symbol2 = document.getElementById('symbol2').value;
+async function getHistory(code){
+  log('📊 تاریخچه: ' + code);
+  const d = await fetchJSON('https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDailyList/' + code + '/0');
+  const list = d.closingPrice || d.closingPriceDaily || [];
+  log('  رکورد: ' + list.length);
+  return list;
+}
 
-            try {
-                const res = await fetch(`/api/ratio?symbol1=${encodeURIComponent(symbol1)}&symbol2=${encodeURIComponent(symbol2)}`);
-                const data = await res.json();
+let chart, line;
 
-                if (data.error) {
-                    errorBox.innerText = 'خطای سرور: ' + data.error;
-                    errorBox.style.display = 'block';
-                    return;
-                }
+function initChart(){
+  const container = document.getElementById('chart');
+  if(chart){ chart.remove(); }
+  chart = LightweightCharts.createChart(container, {
+    width: container.clientWidth,
+    height: 600,
+    layout: { background: { color: '#ffffff' }, textColor: '#333' },
+    grid: { vertLines: { color: '#f0f3fa' }, horzLines: { color: '#f0f3fa' } },
+    timeScale: { timeVisible: true, secondsVisible: false }
+  });
+  line = chart.addLineSeries({ color: '#2962FF', lineWidth: 2 });
+}
 
-                if (!data.ratios || data.ratios.length === 0) {
-                    errorBox.innerText = 'هیچ داده‌ای برای این دو نماد یافت نشد.';
-                    errorBox.style.display = 'block';
-                    return;
-                }
+async function loadRatio(){
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('log').classList.remove('active');
+  try {
+    const s1 = document.getElementById('symbol1').value;
+    const s2 = document.getElementById('symbol2').value;
 
-                if (!chart) initChart();
-                lineSeries.setData(data.ratios);
-                chart.timeScale().fitContent();
-            } catch (err) {
-                errorBox.innerText = 'خطای شبکه: ' + err.message;
-                errorBox.style.display = 'block';
-            }
-        }
+    const c1 = await getInsCode(s1);
+    const c2 = await getInsCode(s2);
+    if(!c1 || !c2){ log('❌ نماد پیدا نشد'); return; }
 
-        window.onload = loadRatio;
-        window.addEventListener('resize', () => {
-            if (chart) chart.applyOptions({ width: document.getElementById('chart').clientWidth });
-        });
-    </script>
+    const h1 = await getHistory(c1);
+    const h2 = await getHistory(c2);
+    if(!h1.length || !h2.length){ log('❌ داده خالی'); return; }
+
+    const m1 = {}, m2 = {};
+    h1.forEach(x => m1[x.dEven] = x.pClosing || x.pDrCotVal);
+    h2.forEach(x => m2[x.dEven] = x.pClosing || x.pDrCotVal);
+
+    const dates = Object.keys(m1).filter(d => m2[d]).sort((a,b) => a - b);
+    log('✅ تاریخ مشترک: ' + dates.length);
+
+    const ratios = dates.map(d => {
+      const s = String(d);
+      const ts = Math.floor(new Date(parseInt(s.substring(0,4)), parseInt(s.substring(4,6))-1, parseInt(s.substring(6,8))).getTime()/1000);
+      return { time: ts, value: m1[d] / m2[d] };
+    });
+
+    initChart();
+    line.setData(ratios);
+    chart.timeScale().fitContent();
+    log('🎉 نمودار رسم شد!');
+
+  } catch(e) {
+    log('❌ خطا: ' + e.message);
+  }
+}
+
+window.addEventListener('resize', () => {
+  if(chart){
+    chart.applyOptions({ width: document.getElementById('chart').clientWidth });
+  }
+});
+
+window.onload = loadRatio;
+</script>
 </body>
 </html>
