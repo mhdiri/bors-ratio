@@ -2,54 +2,65 @@
 <html lang="fa">
 <head>
 <meta charset="UTF-8">
-<title>Vela Test</title>
+<title>Vela - Bors Ratio</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{width:100%;height:100%;overflow:hidden;background:#131722}
   #chart{width:100%;height:100vh}
-  .loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#131722;color:#787b86;font-family:Tahoma;font-size:14px;z-index:10}
-  .loading.hidden{display:none}
-  .error{color:#ef5350;padding:40px;text-align:center;font-family:Tahoma}
+  #log{position:fixed;top:10px;left:10px;background:rgba(0,0,0,.85);padding:10px;border-radius:6px;
+    font-size:11px;font-family:monospace;max-width:400px;z-index:99;white-space:pre-wrap;color:#aed581;
+    direction:ltr;text-align:left}
 </style>
 </head>
 <body>
 <div id="chart"></div>
-<div class="loading" id="loading">Loading Vela...</div>
+<div id="log">loading...</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@luxalgo/vela@latest/dist/vela.global.min.js"></script>
 
 <script>
 (function(){
-  function genData(){
-    const bars=[]; let price=100;
-    const start=new Date(2024,0,1);
-    for(let i=0;i<250;i++){
-      const d=new Date(start); d.setDate(start.getDate()+i);
-      const c=(Math.random()-0.5)*4;
-      const open=price; price=Math.max(1,price+c); const close=price;
-      bars.push({
-        time:d.getTime(),
-        open:+open.toFixed(3),
-        high:+(Math.max(open,close)+Math.random()*2).toFixed(3),
-        low:+(Math.min(open,close)-Math.random()*2).toFixed(3),
-        close:+close.toFixed(3),
-        volume:Math.floor(Math.random()*100000)
-      });
-    }
-    return bars;
-  }
-  window.addEventListener('DOMContentLoaded',function(){
-    const el=document.getElementById('loading');
-    if(typeof Vela==='undefined'){
-      el.innerHTML='<div class="error">❌ Vela لود نشد</div>';
+  var log = function(m){ document.getElementById('log').innerHTML += '\n' + m; };
+
+  window.addEventListener('DOMContentLoaded', function(){
+    log('window.Vela: ' + typeof window.Vela);
+    if (window.Vela) log('keys: ' + Object.keys(window.Vela).join(','));
+
+    var VelaClass = (window.Vela && window.Vela.Vela) ? window.Vela.Vela : window.Vela;
+    if (typeof VelaClass !== 'function') {
+      log('NO CONSTRUCTOR');
       return;
     }
-    el.classList.add('hidden');
-    try{
-      new Vela('#chart',{data:genData(),timeframe:'1D',theme:'dark'});
-      console.log('[Vela] OK');
-    }catch(e){
-      document.getElementById('chart').innerHTML='<div class="error">❌ '+e.message+'</div>';
+    log('OK constructor');
+
+    var bars = [], price = 100;
+    var start = new Date(2024, 0, 1);
+    for (var i = 0; i < 250; i++) {
+      var d = new Date(start); d.setDate(start.getDate() + i);
+      var open = price;
+      price += (Math.random() - 0.5) * 4;
+      var close = price;
+      bars.push({
+        time: d.getTime(),
+        open: +open.toFixed(3),
+        high: +(Math.max(open, close) + Math.random() * 2).toFixed(3),
+        low: +(Math.min(open, close) - Math.random() * 2).toFixed(3),
+        close: +close.toFixed(3),
+        volume: Math.floor(Math.random() * 100000)
+      });
+    }
+    log('bars: ' + bars.length);
+
+    try {
+      var chart = new VelaClass('#chart', {
+        data: bars,
+        timeframe: '1D',
+        theme: 'dark',
+        priceStyle: 'candles'
+      });
+      log('CHART OK');
+    } catch(e) {
+      log('ERR: ' + e.message);
     }
   });
 })();
