@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ratio Chart - TSE</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #131722; }
+  #tv_chart_container { width: 100%; height: 100vh; }
+  .loading {
+    position: fixed; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #131722; color: #d1d4dc;
+    font-family: -apple-system, Tahoma, Arial; font-size: 14px; z-index: 100;
+  }
+  .loading.hidden { display: none; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid #2a2e39; border-top-color: #2962FF;
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+    margin-bottom: 20px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error {
+    color: #ef5350; padding: 20px; text-align: center;
+    max-width: 600px; line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div id="tv_chart_container"></div>
+
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <div>Loading TradingView Charting Library...</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     TradingView Charting Library
+     ⚠️ پوشه charting_library/ باید کنار این فایل باشه
+     ═══════════════════════════════════════════════════ -->
+<script src="charting_library/charting_library.standalone.js"></script>
+
+<!-- ═══════════════════════════════════════════════════
+     Datafeed (اتصال به بورس تهران)
+     ═══════════════════════════════════════════════════ -->
+<script src="datafeed.js"></script>
+
+<!-- ═══════════════════════════════════════════════════
+     راه‌اندازی ویجت
+     ═══════════════════════════════════════════════════ -->
+<script>
+(function() {
+  // بررسی بارگذاری کتابخانه
+  if (typeof TradingView === 'undefined') {
+    document.getElementById('loading').innerHTML =
+      '<div class="error">❌ TradingView library not loaded.<br><br>' +
+      'Make sure the <b>charting_library/</b> folder is in the same directory as index.html.</div>';
+    return;
+  }
+
+  // بررسی Datafeed
+  if (!window.TSEDatafeed) {
+    document.getElementById('loading').innerHTML =
+      '<div class="error">❌ Datafeed not loaded.<br><br>' +
+      'Make sure <b>datafeed.js</b> is in the same directory.</div>';
+    return;
+  }
+
+  // نماد پیش‌فرض از URL یا مقدار پیش‌فرض
+  const urlParams = new URLSearchParams(window.location.search);
+  const defaultSymbol = urlParams.get('symbol') || 'شیراز/شپدیس';
+
+  const widget = new TradingView.widget({
+    container_id: 'tv_chart_container',
+    library_path: 'charting_library/',
+    datafeed: window.TSEDatafeed,
+
+    symbol: defaultSymbol,
+    interval: '1D',
+    timezone: 'Asia/Tehran',
+    locale: 'en',
+
+    theme: 'dark',
+    style: '1',  // 1 = Candles, 2 = Bars, 3 = Line, 8 = Area
+
+    toolbar_bg: '#1e222d',
+    enable_publishing: false,
+    allow_symbol_change: true,
+    withdateranges: true,
+    hide_side_toolbar: false,
+    details: true,
+    hotlist: false,
+    calendar: false,
+
+    // پشتیبانی از نمادهای سفارشی
+    symbol_search_request_delay: 500,
+    auto_save_delay: 5,
+
+    // هشدارها
+    alerts: false,
+
+    // اجزای نمودار
+    disabled_features: [
+      'use_localstorage_for_settings',
+      'save_chart_properties_to_local_storage'
+    ],
+    enabled_features: [
+      'side_toolbar_in_fullscreen_mode',
+      'header_in_fullscreen_mode'
+    ],
+
+    // اجازه لوگو (اجباری طبق توافقنامه)
+    // حذف نکن!
+
+    // پیش‌فرض‌های نمودار
+    overrides: {
+      'paneProperties.background': '#131722',
+      'paneProperties.backgroundType': 'solid',
+      'paneProperties.vertGridProperties.color': '#1e222d',
+      'paneProperties.horzGridProperties.color': '#1e222d',
+      'scalesProperties.textColor': '#d1d4dc',
+      'mainSeriesProperties.candleStyle.upColor': '#26a69a',
+      'mainSeriesProperties.candleStyle.downColor': '#ef5350',
+      'mainSeriesProperties.candleStyle.borderUpColor': '#26a69a',
+      'mainSeriesProperties.candleStyle.borderDownColor': '#ef5350',
+      'mainSeriesProperties.candleStyle.wickUpColor': '#26a69a',
+      'mainSeriesProperties.candleStyle.wickDownColor': '#ef5350'
+    }
+  });
+
+  // پنهان کردن لودینگ بعد از آماده شدن
+  widget.onChartReady(function() {
+    document.getElementById('loading').classList.add('hidden');
+    console.log('[Chart] TradingView is ready');
+
+    // اضافه کردن اندیکاتور پیش‌فرض
+    widget.chart().createStudy('Moving Average', false, false, [20], null, { 'plot.color': '#FF6D00' });
+  });
+
+  // ریدایرکت خطاها به کنسول
+  window.addEventListener('error', function(e) {
+    console.error('[Chart] Error:', e.message);
+  });
+
+})();
+</script>
+
+</body>
+</html>
