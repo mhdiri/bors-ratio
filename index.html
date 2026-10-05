@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>نسبت‌سنجی سهام بورس ایران</title>
-<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+<script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
 <style>
 body{font-family:Tahoma,Arial;background:#f4f6f9;margin:0;padding:20px}
 .container{max-width:1200px;margin:0 auto;background:white;padding:20px;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1)}
@@ -14,7 +14,7 @@ input,button{padding:10px 15px;border:1px solid #ddd;border-radius:5px;font-size
 button{background:#4CAF50;color:white;border:none;cursor:pointer}
 button:hover{background:#45a049}
 #chart{width:100%;height:600px;border:1px solid #eee;border-radius:5px}
-#log{background:#f5f5f5;padding:10px;margin-bottom:15px;font-family:monospace;font-size:12px;border-radius:5px;white-space:pre-wrap;display:none}
+#log{background:#f5f5f5;padding:10px;margin-bottom:15px;font-family:monospace;font-size:12px;border-radius:5px;white-space:pre-wrap;display:none;max-height:200px;overflow:auto}
 #log.active{display:block}
 </style>
 </head>
@@ -36,6 +36,7 @@ const log = m => {
   const el = document.getElementById('log');
   el.classList.add('active');
   el.innerHTML += m + '\n';
+  el.scrollTop = el.scrollHeight;
 };
 
 async function fetchJSON(url){
@@ -64,7 +65,7 @@ let chart, line;
 
 function initChart(){
   const container = document.getElementById('chart');
-  if(chart){ chart.remove(); }
+  if(chart){ chart.remove(); chart = null; }
   chart = LightweightCharts.createChart(container, {
     width: container.clientWidth,
     height: 600,
@@ -77,7 +78,6 @@ function initChart(){
 
 async function loadRatio(){
   document.getElementById('log').innerHTML = '';
-  document.getElementById('log').classList.remove('active');
   try {
     const s1 = document.getElementById('symbol1').value;
     const s2 = document.getElementById('symbol2').value;
