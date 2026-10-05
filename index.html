@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نسبت‌سنجی سهام بورس ایران</title>
-    <!-- کتابخانه نمودار TradingView -->
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <style>
         body { font-family: Tahoma, Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
@@ -15,6 +14,7 @@
         button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
         button:hover { background-color: #45a049; }
         #chart { width: 100%; height: 600px; border: 1px solid #eee; border-radius: 5px; }
+        #error-box { display: none; background: #ffebee; color: #c62828; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #ef9a9a; word-break: break-all; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -26,6 +26,7 @@
             <input type="text" id="symbol2" value="شپدیس" placeholder="نماد دوم">
             <button onclick="loadRatio()">مقایسه کن</button>
         </div>
+        <div id="error-box"></div>
         <div id="chart"></div>
     </div>
 
@@ -46,16 +47,25 @@
         }
 
         async function loadRatio() {
+            const errorBox = document.getElementById('error-box');
+            errorBox.style.display = 'none';
+
             const symbol1 = document.getElementById('symbol1').value;
             const symbol2 = document.getElementById('symbol2').value;
 
             try {
-                // درخواست به بک‌اند سایت خودمان
                 const res = await fetch(`/api/ratio?symbol1=${encodeURIComponent(symbol1)}&symbol2=${encodeURIComponent(symbol2)}`);
                 const data = await res.json();
 
                 if (data.error) {
-                    alert(data.error);
+                    errorBox.innerText = 'خطای سرور: ' + data.error;
+                    errorBox.style.display = 'block';
+                    return;
+                }
+
+                if (!data.ratios || data.ratios.length === 0) {
+                    errorBox.innerText = 'هیچ داده‌ای برای این دو نماد یافت نشد.';
+                    errorBox.style.display = 'block';
                     return;
                 }
 
@@ -63,12 +73,11 @@
                 lineSeries.setData(data.ratios);
                 chart.timeScale().fitContent();
             } catch (err) {
-                alert('خطا در دریافت داده‌ها. لطفاً اینترنت خود را بررسی کنید.');
-                console.error(err);
+                errorBox.innerText = 'خطای شبکه: ' + err.message;
+                errorBox.style.display = 'block';
             }
         }
 
-        // بارگذاری خودکار در ابتدا
         window.onload = loadRatio;
         window.addEventListener('resize', () => {
             if (chart) chart.applyOptions({ width: document.getElementById('chart').clientWidth });
