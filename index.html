@@ -17,23 +17,19 @@ button{background:transparent;border:none;color:inherit;font-family:inherit;curs
 input{background:transparent;border:none;color:inherit;font-family:inherit;outline:none}
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-thumb{background:var(--panel2);border-radius:3px}
-::-webkit-scrollbar-track{background:transparent}
 
-/* ===== ساختار کلی ===== */
 .tv{display:grid;grid-template-rows:38px 1fr 32px;height:100vh}
 .tv-top{display:flex;align-items:center;gap:2px;padding:0 8px;background:var(--panel);border-bottom:1px solid var(--border);overflow:hidden}
 .tv-main{display:grid;grid-template-columns:52px 1fr;overflow:hidden}
 .tv-bottom{display:flex;align-items:center;gap:4px;padding:0 10px;background:var(--panel);border-top:1px solid var(--border);overflow-x:auto}
 .tv-bottom::-webkit-scrollbar{height:0}
 
-/* ===== نوار بالا ===== */
 .symbol-input{display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--panel2);border-radius:6px;font-size:13px;font-weight:600;margin-left:2px}
 .symbol-input input{width:90px;font-weight:600;font-size:13px}
 .symbol-input input::placeholder{color:var(--text2);font-weight:400}
 .symbol-input .slash{color:var(--text2)}
 .symbol-input .go{background:var(--accent);color:#fff;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:600}
 .symbol-input .go:hover{background:#1e4fd8}
-.symbol-input .vs{color:var(--text2);font-size:11px;padding:0 4px}
 
 .tf-bar{display:flex;align-items:center;gap:1px;margin:0 4px}
 .tf-btn{padding:5px 8px;border-radius:4px;font-size:12px;color:var(--text2);font-weight:500;transition:all 0.15s}
@@ -48,7 +44,6 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
 .tool-btn.icon:hover{color:var(--text)}
 .tool-btn.accent{color:var(--accent)}
 
-/* ===== دراپ‌داون ===== */
 .drop{position:relative}
 .drop-menu{position:absolute;top:100%;right:0;margin-top:6px;background:#1e222d;border:1px solid var(--border);border-radius:8px;padding:6px;min-width:220px;box-shadow:0 10px 30px rgba(0,0,0,0.5);z-index:1000;display:none}
 .drop-menu.open{display:block}
@@ -56,30 +51,30 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
 .drop-menu .item{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-radius:5px;font-size:12px;color:var(--text);cursor:pointer;transition:background 0.15s}
 .drop-menu .item:hover{background:var(--panel2)}
 .drop-menu .item.active{background:var(--accent);color:#fff}
-.drop-menu .item .fav{color:var(--yellow);font-size:12px}
-.drop-menu .item .check{color:var(--accent);font-size:14px}
 .drop-menu .divider{height:1px;background:var(--border);margin:6px 4px}
 .drop-menu label.item{cursor:pointer}
 .drop-menu input[type=checkbox]{margin-left:auto;accent-color:var(--accent);width:14px;height:14px}
 
-/* ===== نوار ابزار چپ ===== */
-.left-bar{background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:2px;overflow-y:auto;overflow-x:hidden}
+.left-bar{background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:2px;overflow-y:auto}
 .left-bar::-webkit-scrollbar{width:0}
-.lb-btn{width:38px;height:38px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:17px;transition:all 0.15s}
+.lb-btn{width:38px;height:38px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:17px;transition:all 0.15s;position:relative}
 .lb-btn:hover{background:var(--panel2);color:var(--text)}
 .lb-btn.active{background:var(--accent);color:#fff}
 .lb-sep{width:24px;height:1px;background:var(--border);margin:5px 0}
-.lb-btn.pin{position:absolute;bottom:8px;left:8px}
+.lb-btn .tip{position:absolute;right:48px;top:50%;transform:translateY(-50%);background:#000;color:#fff;padding:4px 8px;border-radius:4px;font-size:11px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.15s;z-index:1000}
+.lb-btn:hover .tip{opacity:1}
 
-/* ===== ناحیه نمودار ===== */
 .chart-area{position:relative;background:var(--bg);overflow:hidden}
 #chart{width:100%;height:100%}
 #rsiWrap{position:absolute;bottom:0;right:0;left:0;height:140px;border-top:1px solid var(--border);background:var(--bg);display:none;z-index:3}
 #rsiWrap.show{display:block}
 #rsiChart{width:100%;height:100%}
 
-/* لجند */
-.legend{position:absolute;top:10px;right:70px;background:rgba(30,34,45,0.9);border-radius:6px;padding:8px 12px;font-size:11px;z-index:10;backdrop-filter:blur(8px);display:none;min-width:220px}
+/* SVG overlay for drawing */
+#drawSvg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:4;pointer-events:none}
+#drawSvg.drawing{pointer-events:auto;cursor:crosshair}
+
+.legend{position:absolute;top:10px;right:70px;background:rgba(30,34,45,0.9);border-radius:6px;padding:8px 12px;font-size:11px;z-index:10;backdrop-filter:blur(8px);display:none;min-width:220px;pointer-events:none}
 .legend.show{display:block}
 .legend .head{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;margin-bottom:4px}
 .legend .price{color:var(--accent);font-family:monospace;font-size:14px}
@@ -89,8 +84,7 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
 .legend .row{display:flex;justify-content:space-between;padding:2px 0;color:var(--text2)}
 .legend .row span:last-child{color:var(--text);font-family:monospace}
 
-/* پنل آمار */
-.stats{position:absolute;top:10px;left:10px;background:rgba(30,34,45,0.9);border-radius:6px;padding:10px 12px;font-size:11px;z-index:10;backdrop-filter:blur(8px);display:none;min-width:170px}
+.stats{position:absolute;top:10px;left:10px;background:rgba(30,34,45,0.9);border-radius:6px;padding:10px 12px;font-size:11px;z-index:10;backdrop-filter:blur(8px);display:none;min-width:170px;pointer-events:none}
 .stats.show{display:block}
 .stats .title{font-weight:700;color:var(--text);margin-bottom:6px;font-size:12px;display:flex;align-items:center;gap:6px}
 .stats .row{display:flex;justify-content:space-between;padding:3px 0;gap:15px}
@@ -101,29 +95,21 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
 .stats .v.blue{color:var(--accent)}
 .stats .v.orange{color:#f7b600}
 
-/* سیگنال */
-.signal{position:absolute;bottom:150px;right:70px;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;z-index:10;display:none;backdrop-filter:blur(8px)}
+.signal{position:absolute;bottom:150px;right:70px;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;z-index:10;display:none;backdrop-filter:blur(8px);pointer-events:none}
 .signal.show{display:block}
 .signal.buy{background:rgba(38,166,154,0.15);color:var(--green);border:1px solid rgba(38,166,154,0.5)}
 .signal.sell{background:rgba(239,83,80,0.15);color:var(--red);border:1px solid rgba(239,83,80,0.5)}
 .signal.neutral{background:rgba(247,182,0,0.15);color:#f7b600;border:1px solid rgba(247,182,0,0.5)}
 
-/* کراس‌هیر */
-.xh{position:absolute;bottom:8px;left:10px;background:var(--panel2);padding:3px 8px;border-radius:4px;font-size:11px;font-family:monospace;color:var(--text);z-index:10;display:none}
+.xh{position:absolute;bottom:8px;left:10px;background:var(--panel2);padding:3px 8px;border-radius:4px;font-size:11px;font-family:monospace;color:var(--text);z-index:10;display:none;pointer-events:none}
 
-/* لودینگ */
 .loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text2);background:var(--bg);z-index:20;font-size:13px}
 .loading.hide{display:none}
 .spin{width:32px;height:32px;border:2px solid var(--panel2);border-top-color:var(--accent);border-radius:50%;animation:sp 0.7s linear infinite;margin-bottom:12px}
 @keyframes sp{to{transform:rotate(360deg)}}
 
-/* علامت قیمت روی اسکیل */
-.price-tag{position:absolute;right:0;padding:2px 6px;background:var(--red);color:#fff;font-size:11px;font-family:monospace;border-radius:3px;z-index:5;transform:translateY(-50%)}
-
 @media(max-width:768px){
   .symbol-input input{width:60px}
-  .legend{min-width:auto;right:auto;left:10px;top:auto;bottom:150px}
-  .signal{bottom:auto;top:60px;right:10px}
 }
 </style>
 </head>
@@ -131,14 +117,13 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
 
 <div class="tv">
 
-  <!-- ============ نوار بالا ============ -->
   <div class="tv-top">
     <button class="tool-btn icon" title="جستجو">🔍</button>
     <button class="tool-btn icon" title="منو">☰</button>
 
     <div class="symbol-input">
       <input list="symbolsList" id="symbol1" placeholder="شیراز" autocomplete="off">
-      <span class="vs">/</span>
+      <span class="slash">/</span>
       <input list="symbolsList" id="symbol2" placeholder="شپدیس" autocomplete="off">
       <button class="go" id="goBtn" onclick="loadRatio()">تحلیل</button>
     </div>
@@ -148,36 +133,20 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
 
     <div class="tf-bar" id="tfBar">
       <button class="tf-btn" data-r="7">۱ه</button>
-      <button class="tf-btn" data-r="1">۱ر</button>
       <button class="tf-btn" data-r="30">۱م</button>
       <button class="tf-btn" data-r="90">۳م</button>
       <button class="tf-btn" data-r="180">۶م</button>
-      <button class="tf-btn" data-r="365">۱س</button>
+      <button class="tf-btn active" data-r="365">۱س</button>
       <button class="tf-btn" data-r="1825">۵س</button>
       <button class="tf-btn" data-r="0">همه</button>
-      <button class="tf-btn" onclick="openDrop('tfDrop',event)" title="بازه سفارشی">🕐</button>
-    </div>
-    <div class="drop">
-      <div class="drop-menu" id="tfDrop">
-        <div class="head">بازه‌های زمانی</div>
-        <div class="item" onclick="setRange(7);closeDrops()">۱ هفته <span class="fav">★</span></div>
-        <div class="item" onclick="setRange(30);closeDrops()">۱ ماه <span class="fav">★</span></div>
-        <div class="item" onclick="setRange(90);closeDrops()">۳ ماه <span class="fav">★</span></div>
-        <div class="item" onclick="setRange(180);closeDrops()">۶ ماه <span class="fav">★</span></div>
-        <div class="item" onclick="setRange(365);closeDrops()">۱ سال <span class="fav">★</span></div>
-        <div class="item" onclick="setRange(1095);closeDrops()">۳ سال <span class="fav">★</span></div>
-        <div class="item" onclick="setRange(1825);closeDrops()">۵ سال <span class="fav">★</span></div>
-        <div class="divider"></div>
-        <div class="item" onclick="setRange(0);closeDrops()">همه داده‌ها</div>
-      </div>
     </div>
 
     <div class="sep"></div>
 
     <div class="drop">
-      <button class="tool-btn" onclick="openDrop('typeDrop',event)">📊 نوع نمودار ▾</button>
+      <button class="tool-btn" onclick="openDrop('typeDrop',event)">📊 نوع ▾</button>
       <div class="drop-menu" id="typeDrop">
-        <div class="item active" onclick="setChartType('line',this)">📈 خطی <span class="check">✓</span></div>
+        <div class="item active" onclick="setChartType('line',this)">📈 خطی</div>
         <div class="item" onclick="setChartType('area',this)">🌊 ناحیه‌ای</div>
         <div class="item" onclick="setChartType('baseline',this)">➖ خط پایه</div>
       </div>
@@ -191,7 +160,6 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
         <label class="item"><span style="color:#9C27B0">MA 50</span><input type="checkbox" id="tMA50" checked onchange="redraw()"></label>
         <label class="item"><span style="color:#E91E63">MA 200</span><input type="checkbox" id="tMA200" onchange="redraw()"></label>
         <div class="divider"></div>
-        <div class="head">اندیکاتورها</div>
         <label class="item"><span style="color:#00BCD4">باندهای بولینگر</span><input type="checkbox" id="tBB" checked onchange="redraw()"></label>
         <label class="item">خطوط حداکثر/حداقل<input type="checkbox" id="tMinMax" onchange="redraw()"></label>
         <label class="item">RSI<input type="checkbox" id="tRSI" checked onchange="toggleRSI()"></label>
@@ -206,30 +174,26 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
     <button class="tool-btn accent" onclick="loadRatio()" title="به‌روزرسانی">⟳</button>
   </div>
 
-  <!-- ============ بدنه ============ -->
   <div class="tv-main">
 
-    <!-- نوار ابزار چپ -->
     <div class="left-bar">
-      <button class="lb-btn active" title="کراس‌هیر">✛</button>
-      <button class="lb-btn" title="خط روند">╱</button>
-      <button class="lb-btn" title="خط افقی">─</button>
-      <button class="lb-btn" title="کانال موازی">∥</button>
+      <button class="lb-btn active" data-tool="cursor" title="کراس‌هیر (بدون ترسیم)">✛<span class="tip">کراس‌هیر</span></button>
+      <button class="lb-btn" data-tool="trend" title="خط روند">╱<span class="tip">خط روند</span></button>
+      <button class="lb-btn" data-tool="hline" title="خط افقی">─<span class="tip">خط افقی</span></button>
       <div class="lb-sep"></div>
-      <button class="lb-btn" title="فیبوناچی">f</button>
-      <button class="lb-btn" title="مستطیل">▭</button>
-      <button class="lb-btn" title="متن">T</button>
+      <button class="lb-btn" data-tool="fib" title="فیبوناچی">f<span class="tip">فیبوناچی</span></button>
+      <button class="lb-btn" data-tool="rect" title="مستطیل">▭<span class="tip">مستطیل</span></button>
+      <button class="lb-btn" data-tool="text" title="متن">T<span class="tip">متن</span></button>
       <div class="lb-sep"></div>
-      <button class="lb-btn" title="زوم">🔍</button>
-      <button class="lb-btn" onclick="resetZoom()" title="بازنشانی">⟲</button>
-      <button class="lb-btn" title="قفل">🔒</button>
+      <button class="lb-btn" onclick="undoLast()" title="حذف آخرین">↶<span class="tip">حذف آخرین</span></button>
+      <button class="lb-btn" onclick="clearAll()" title="پاک کردن همه">🗑<span class="tip">پاک کردن همه</span></button>
       <div class="lb-sep"></div>
-      <button class="lb-btn" title="حذف">🗑</button>
+      <button class="lb-btn" onclick="resetZoom()" title="بازنشانی">⟲<span class="tip">بازنشانی زوم</span></button>
     </div>
 
-    <!-- ناحیه نمودار -->
     <div class="chart-area" id="chartArea">
       <div id="chart"></div>
+      <svg id="drawSvg"></svg>
       <div id="rsiWrap"><div id="rsiChart"></div></div>
 
       <div class="legend" id="legend">
@@ -239,7 +203,6 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
           <span class="change" id="legChange">-</span>
         </div>
         <div class="row"><span>دوره</span><span id="legRange">-</span></div>
-        <div class="row"><span>تغییر</span><span id="legChangeAbs">-</span></div>
       </div>
 
       <div class="stats" id="statsPanel">
@@ -263,11 +226,9 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
 
   </div>
 
-  <!-- ============ نوار پایین ============ -->
   <div class="tv-bottom">
-    <button class="tf-btn" onclick="resetZoom()" title="بازنشانی">⟲</button>
+    <button class="tf-btn" onclick="resetZoom()">⟲</button>
     <div class="sep"></div>
-    <button class="tf-btn" data-r="1">۱ر</button>
     <button class="tf-btn" data-r="7">۱ه</button>
     <button class="tf-btn" data-r="30">۱م</button>
     <button class="tf-btn" data-r="90">۳م</button>
@@ -277,12 +238,12 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
     <button class="tf-btn" data-r="0">همه</button>
     <div class="sep"></div>
     <span style="font-size:11px;color:var(--text2);margin-right:auto" id="statusMsg">آماده</span>
+    <span style="font-size:11px;color:var(--text2)" id="toolStatus">ابزار: کراس‌هیر</span>
   </div>
 
 </div>
 
 <script>
-/* ============ کمکی ============ */
 const $ = id => document.getElementById(id);
 const setStatus = m => $('statusMsg').innerText = m;
 
@@ -299,7 +260,6 @@ async function fj(url){
   return r.json();
 }
 
-/* ============ دراپ‌داون ============ */
 function openDrop(id, ev){
   ev.stopPropagation();
   document.querySelectorAll('.drop-menu').forEach(m => { if(m.id !== id) m.classList.remove('open'); });
@@ -309,7 +269,6 @@ function closeDrops(){ document.querySelectorAll('.drop-menu').forEach(m => m.cl
 document.addEventListener('click', closeDrops);
 document.querySelectorAll('.drop-menu').forEach(m => m.addEventListener('click', e => e.stopPropagation()));
 
-/* ============ تم ============ */
 let isDark = true;
 function toggleTheme(){
   isDark = !isDark;
@@ -333,7 +292,6 @@ function toggleTheme(){
   if(currentRatios.length) redraw();
 }
 
-/* ============ لیست نمادها ============ */
 let allSymbols = [];
 async function loadAllSymbols(){
   try {
@@ -348,7 +306,6 @@ function findCode(s){ const f = allSymbols.find(x => x.symbol === s.trim()); ret
 async function getInsCode(s){ const l = findCode(s); if(l) return l; const d = await fj('https://cdn.tsetmc.com/api/Instrument/GetInstrumentSearch/' + encodeURIComponent(s)); return d.instrumentSearch?.[0]?.insCode || null; }
 async function getHistory(c){ const d = await fj('https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDailyList/' + c + '/0'); return d.closingPriceDaily || d.closingPrice || []; }
 
-/* ============ اندیکاتورها ============ */
 function calcMA(d, p){ const o = []; for(let i=p-1; i<d.length; i++){ let s = 0; for(let j=0; j<p; j++) s += d[i-j].value; o.push({time:d[i].time, value:s/p}); } return o; }
 function calcBB(d, p=20, m=2){
   const u = [], l = [];
@@ -385,7 +342,6 @@ function calcStats(d){
   return {mean, std:sd, min:s[0], max:s[n-1], current:cur, zScore:z, pct:+pct, n};
 }
 
-/* ============ نمودار ============ */
 let chart, rsiChart, series = {};
 let allRatios = [], currentRatios = [];
 let currentRange = 365, chartType = 'line';
@@ -428,19 +384,18 @@ function initCharts(){
   series.maxL = chart.addLineSeries({color:'#ef5350', lineWidth:1, lineStyle:2});
   series.minL = chart.addLineSeries({color:'#26a69a', lineWidth:1, lineStyle:2});
 
-  // RSI chart
   const rEl = $('rsiChart');
   rsiChart = LightweightCharts.createChart(rEl, chartOpts(rEl, 140));
   series.rsi = rsiChart.addLineSeries({color:'#FF9800', lineWidth:2});
   series.rsi70 = rsiChart.addLineSeries({color:'#ef5350', lineWidth:1, lineStyle:2});
   series.rsi30 = rsiChart.addLineSeries({color:'#26a69a', lineWidth:1, lineStyle:2});
 
-  // همگام‌سازی
   let syncing = false;
   chart.timeScale().subscribeVisibleLogicalRangeChange(r => {
     if(syncing || !r || !rsiChart) return; syncing = true;
     rsiChart.timeScale().setVisibleLogicalRange(r);
     setTimeout(() => syncing = false, 0);
+    redrawDrawings();
   });
   rsiChart.timeScale().subscribeVisibleLogicalRangeChange(r => {
     if(syncing || !r || !chart) return; syncing = true;
@@ -448,7 +403,6 @@ function initCharts(){
     setTimeout(() => syncing = false, 0);
   });
 
-  // کراس‌هیر
   chart.subscribeCrosshairMove(p => {
     const info = $('xhInfo');
     if(!p.time || !currentRatios.length){ info.style.display = 'none'; return; }
@@ -463,9 +417,8 @@ function initCharts(){
 
 function setChartType(t, el){
   chartType = t;
-  document.querySelectorAll('#typeDrop .item').forEach(i => { i.classList.remove('active'); const c = i.querySelector('.check'); if(c) c.remove(); });
+  document.querySelectorAll('#typeDrop .item').forEach(i => i.classList.remove('active'));
   el.classList.add('active');
-  if(!el.querySelector('.check')) el.innerHTML += ' <span class="check">✓</span>';
   closeDrops();
   if(currentRatios.length){ initCharts(); redraw(); }
 }
@@ -474,7 +427,6 @@ function resetZoom(){ if(chart) chart.timeScale().fitContent(); if(rsiChart) rsi
 function toggleRSI(){ const w = $('rsiWrap'); w.classList.toggle('show', $('tRSI').checked); setTimeout(() => { if(chart) chart.applyOptions({width:$('chart').clientWidth, height:$('chart').clientHeight}); if(rsiChart) rsiChart.applyOptions({width:$('rsiChart').clientWidth}); }, 50); }
 function toggleStats(){ $('statsPanel').classList.toggle('show'); $('statsBtn').style.background = $('statsPanel').classList.contains('show') ? 'var(--panel2)' : 'transparent'; }
 
-/* ============ رسم ============ */
 function redraw(){
   if(!currentRatios.length || !chart) return;
   series.ratio.setData(currentRatios);
@@ -501,9 +453,9 @@ function redraw(){
 
   chart.timeScale().fitContent();
   if(rsiChart) rsiChart.timeScale().fitContent();
+  setTimeout(redrawDrawings, 100);
 }
 
-/* ============ تایم‌فریم ============ */
 function setRange(days){
   currentRange = days;
   document.querySelectorAll('#tfBar .tf-btn').forEach(b => b.classList.toggle('active', +b.dataset.r === days));
@@ -525,7 +477,6 @@ document.querySelectorAll('#tfBar .tf-btn, .tv-bottom .tf-btn').forEach(b => {
   }
 });
 
-/* ============ آمار و سیگنال ============ */
 function updateStatsAndSignal(){
   const st = calcStats(currentRatios);
   const chg = ((st.current - currentRatios[0].value) / currentRatios[0].value * 100).toFixed(2);
@@ -537,7 +488,6 @@ function updateStatsAndSignal(){
   const chEl = $('legChange');
   chEl.innerText = (chg >= 0 ? '+' : '') + chg + '%';
   chEl.className = 'change ' + (chg >= 0 ? 'up' : 'down');
-  $('legChangeAbs').innerText = (st.current - currentRatios[0].value >= 0 ? '+' : '') + (st.current - currentRatios[0].value).toFixed(4);
 
   const d1 = new Date(currentRatios[0].time*1000).toLocaleDateString('fa-IR');
   const d2 = new Date(currentRatios[currentRatios.length-1].time*1000).toLocaleDateString('fa-IR');
@@ -563,7 +513,232 @@ function updateStatsAndSignal(){
   sig.className = 'signal show ' + cls;
 }
 
-/* ============ تحلیل ============ */
+/* ============================================================
+   سیستم ابزار ترسیم
+   ============================================================ */
+let currentTool = 'cursor';
+let drawings = [];      // لیست اشیاء ترسیم‌شده
+let activeDraw = null;  // ترسیم در حال انجام
+let startPt = null;     // نقطه شروع
+
+// انتخاب ابزار
+document.querySelectorAll('.lb-btn[data-tool]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.lb-btn[data-tool]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTool = btn.dataset.tool;
+    $('toolStatus').innerText = 'ابزار: ' + btn.querySelector('.tip').innerText;
+    const svg = $('drawSvg');
+    if(currentTool === 'cursor'){
+      svg.classList.remove('drawing');
+    } else {
+      svg.classList.add('drawing');
+    }
+  });
+});
+
+// تبدیل مختصات پیکسل به مختصات داده
+function px2data(x, y){
+  const chartEl = $('chart');
+  const rect = chartEl.getBoundingClientRect();
+  const relX = x - rect.left;
+  const relY = y - rect.top;
+  const time = chart.timeScale().coordinateToTime(relX);
+  const price = series.ratio.coordinateToPrice(relY);
+  return { time, price };
+}
+function data2px(time, price){
+  const chartEl = $('chart');
+  const rect = chartEl.getBoundingClientRect();
+  const x = chart.timeScale().timeToCoordinate(time);
+  const y = series.ratio.priceToCoordinate(price);
+  if(x === null || y === null) return null;
+  return { x, y };
+}
+
+// شروع ترسیم
+$('drawSvg').addEventListener('mousedown', e => {
+  if(currentTool === 'cursor' || !currentRatios.length) return;
+  const pt = px2data(e.clientX, e.clientY);
+  if(!pt.time || pt.price === null) return;
+  startPt = pt;
+
+  if(currentTool === 'hline'){
+    drawings.push({ type: 'hline', p1: pt });
+    redrawDrawings();
+    return;
+  }
+  if(currentTool === 'text'){
+    const txt = prompt('متن را وارد کنید:');
+    if(txt) drawings.push({ type: 'text', p1: pt, text: txt });
+    redrawDrawings();
+    return;
+  }
+  activeDraw = { type: currentTool, p1: pt, p2: pt };
+});
+
+// ادامه ترسیم
+$('drawSvg').addEventListener('mousemove', e => {
+  if(!activeDraw) return;
+  const pt = px2data(e.clientX, e.clientY);
+  if(!pt.time) return;
+  activeDraw.p2 = pt;
+  redrawDrawings();
+});
+
+// پایان ترسیم
+$('drawSvg').addEventListener('mouseup', e => {
+  if(!activeDraw) return;
+  drawings.push(activeDraw);
+  activeDraw = null;
+  redrawDrawings();
+});
+
+// بازترسیم تمام اشیاء
+function redrawDrawings(){
+  const svg = $('drawSvg');
+  svg.innerHTML = '';
+  if(!chart) return;
+
+  const chartEl = $('chart');
+  const rect = chartEl.getBoundingClientRect();
+  svg.setAttribute('viewBox', '0 0 ' + rect.width + ' ' + rect.height);
+  svg.style.width = rect.width + 'px';
+  svg.style.height = rect.height + 'px';
+
+  const all = activeDraw ? [...drawings, activeDraw] : drawings;
+  all.forEach((d, idx) => {
+    const p1 = data2px(d.p1.time, d.p1.price);
+    if(!p1) return;
+
+    if(d.type === 'trend'){
+      const p2 = data2px(d.p2.time, d.p2.price);
+      if(!p2) return;
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', p1.x);
+      line.setAttribute('y1', p1.y);
+      line.setAttribute('x2', p2.x);
+      line.setAttribute('y2', p2.y);
+      line.setAttribute('stroke', '#2962FF');
+      line.setAttribute('stroke-width', '2');
+      svg.appendChild(line);
+      // نقاط
+      [p1, p2].forEach(p => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); c.setAttribute('r', '4');
+        c.setAttribute('fill', '#2962FF');
+        svg.appendChild(c);
+      });
+    }
+
+    else if(d.type === 'hline'){
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', '0');
+      line.setAttribute('y1', p1.y);
+      line.setAttribute('x2', rect.width);
+      line.setAttribute('y2', p1.y);
+      line.setAttribute('stroke', '#f7b600');
+      line.setAttribute('stroke-width', '1.5');
+      line.setAttribute('stroke-dasharray', '6,4');
+      svg.appendChild(line);
+      // برچسب قیمت
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', rect.width - 60);
+      t.setAttribute('y', p1.y - 5);
+      t.setAttribute('fill', '#f7b600');
+      t.setAttribute('font-size', '11');
+      t.setAttribute('font-family', 'monospace');
+      t.textContent = d.p1.price.toFixed(4);
+      svg.appendChild(t);
+    }
+
+    else if(d.type === 'rect'){
+      const p2 = data2px(d.p2.time, d.p2.price);
+      if(!p2) return;
+      const x = Math.min(p1.x, p2.x), y = Math.min(p1.y, p2.y);
+      const w = Math.abs(p2.x - p1.x), h = Math.abs(p2.y - p1.y);
+      const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      r.setAttribute('x', x); r.setAttribute('y', y);
+      r.setAttribute('width', w); r.setAttribute('height', h);
+      r.setAttribute('fill', 'rgba(38,166,154,0.15)');
+      r.setAttribute('stroke', '#26a69a');
+      r.setAttribute('stroke-width', '1.5');
+      svg.appendChild(r);
+    }
+
+    else if(d.type === 'fib'){
+      const p2 = data2px(d.p2.time, d.p2.price);
+      if(!p2) return;
+      const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+      const colors = ['#787b86', '#ef5350', '#f7b600', '#26a69a', '#2962FF', '#9C27B0', '#787b86'];
+      const x1 = Math.min(p1.x, p2.x), x2 = Math.max(p1.x, p2.x);
+      levels.forEach((lv, i) => {
+        const y = p1.y + (p2.y - p1.y) * lv;
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y);
+        line.setAttribute('stroke', colors[i]);
+        line.setAttribute('stroke-width', '1');
+        svg.appendChild(line);
+        const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        t.setAttribute('x', x1 - 4);
+        t.setAttribute('y', y + 4);
+        t.setAttribute('fill', colors[i]);
+        t.setAttribute('font-size', '10');
+        t.setAttribute('text-anchor', 'end');
+        t.setAttribute('font-family', 'monospace');
+        t.textContent = (lv * 100).toFixed(1) + '%';
+        svg.appendChild(t);
+      });
+    }
+
+    else if(d.type === 'text'){
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', p1.x);
+      t.setAttribute('y', p1.y);
+      t.setAttribute('fill', '#f7b020');
+      t.setAttribute('font-size', '14');
+      t.setAttribute('font-weight', 'bold');
+      t.setAttribute('font-family', 'Tahoma');
+      t.textContent = d.text;
+      svg.appendChild(t);
+    }
+  });
+
+  // پشتیبانی از کلیک راست برای حذف
+  svg.querySelectorAll('line, rect, text, circle').forEach(el => {
+    el.style.pointerEvents = 'auto';
+    el.style.cursor = 'pointer';
+    el.addEventListener('contextmenu', ev => {
+      ev.preventDefault();
+      const parent = ev.target.parentElement;
+      // پیدا کردن ایندکس ترسیم
+      const allEls = Array.from(svg.children);
+      // حذف کل گروه مربوط به این ترسیم سخت است، پس همه را پاک و بازسازی می‌کنیم با حذف یک مورد
+      // برای سادگی: حذف آخرین
+      undoLast();
+    });
+  });
+}
+
+function undoLast(){
+  if(!drawings.length) return;
+  drawings.pop();
+  redrawDrawings();
+}
+function clearAll(){
+  if(!drawings.length) return;
+  if(confirm('همه ترسیم‌ها پاک شوند؟')){
+    drawings = [];
+    redrawDrawings();
+  }
+}
+
+/* ============================================================
+   تحلیل
+   ============================================================ */
 async function loadRatio(){
   const btn = $('goBtn');
   btn.disabled = true;
@@ -598,7 +773,10 @@ async function loadRatio(){
     allRatios = Object.values(uq).sort((a,b) => a.time - b.time);
     if(allRatios.length < 2){ alert('داده کافی نیست'); btn.disabled = false; return; }
 
-    // اعمال فیلتر
+    // پاک کردن ترسیم‌های قبلی (چون داده جدید است)
+    drawings = [];
+    activeDraw = null;
+
     if(currentRange === 0) currentRatios = allRatios.slice();
     else {
       const lastT = allRatios[allRatios.length-1].time;
@@ -610,7 +788,6 @@ async function loadRatio(){
     updateStatsAndSignal();
     redraw();
 
-    // نمایش پنل آمار
     $('statsPanel').classList.add('show');
     $('statsBtn').style.background = 'var(--panel2)';
 
@@ -626,7 +803,6 @@ async function loadRatio(){
   btn.disabled = false;
 }
 
-/* ============ CSV ============ */
 function exportCSV(){
   if(!currentRatios.length){ alert('ابتدا تحلیل کنید'); return; }
   const s1 = $('symbol1').value, s2 = $('symbol2').value;
@@ -641,17 +817,16 @@ function exportCSV(){
   a.click();
 }
 
-/* ============ ریسایز ============ */
 let rt;
 window.addEventListener('resize', () => {
   clearTimeout(rt);
   rt = setTimeout(() => {
     if(chart) chart.applyOptions({width: $('chart').clientWidth, height: $('chart').clientHeight});
     if(rsiChart) rsiChart.applyOptions({width: $('rsiChart').clientWidth, height: $('rsiChart').clientHeight});
+    redrawDrawings();
   }, 100);
 });
 
-/* ============ شروع ============ */
 loadAllSymbols();
 $('symbol1').value = localStorage.getItem('s1') || 'شیراز';
 $('symbol2').value = localStorage.getItem('s2') || 'شپدیس';
