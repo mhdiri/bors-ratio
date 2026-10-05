@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>Vela Test</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#131722}
+  #chart{width:100%;height:100vh}
+  .loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#131722;color:#787b86;font-family:Tahoma;font-size:14px;z-index:10}
+  .loading.hidden{display:none}
+  .error{color:#ef5350;padding:40px;text-align:center;font-family:Tahoma}
+</style>
+</head>
+<body>
+<div id="chart"></div>
+<div class="loading" id="loading">Loading Vela...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@luxalgo/vela@latest/dist/vela.global.min.js"></script>
+
+<script>
+(function(){
+  function genData(){
+    const bars=[]; let price=100;
+    const start=new Date(2024,0,1);
+    for(let i=0;i<250;i++){
+      const d=new Date(start); d.setDate(start.getDate()+i);
+      const c=(Math.random()-0.5)*4;
+      const open=price; price=Math.max(1,price+c); const close=price;
+      bars.push({
+        time:d.getTime(),
+        open:+open.toFixed(3),
+        high:+(Math.max(open,close)+Math.random()*2).toFixed(3),
+        low:+(Math.min(open,close)-Math.random()*2).toFixed(3),
+        close:+close.toFixed(3),
+        volume:Math.floor(Math.random()*100000)
+      });
+    }
+    return bars;
+  }
+  window.addEventListener('DOMContentLoaded',function(){
+    const el=document.getElementById('loading');
+    if(typeof Vela==='undefined'){
+      el.innerHTML='<div class="error">❌ Vela لود نشد</div>';
+      return;
+    }
+    el.classList.add('hidden');
+    try{
+      new Vela('#chart',{data:genData(),timeframe:'1D',theme:'dark'});
+      console.log('[Vela] OK');
+    }catch(e){
+      document.getElementById('chart').innerHTML='<div class="error">❌ '+e.message+'</div>';
+    }
+  });
+})();
+</script>
+</body>
+</html>
