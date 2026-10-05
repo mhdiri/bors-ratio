@@ -45,23 +45,30 @@ export async function onRequest(context) {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: 'خطا در ارتباط با سرور بورس' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    // این بخش برای نمایش دقیق خطا به ما کمک می‌کند
+    return new Response(JSON.stringify({ error: 'خطای داخلی: ' + error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
 
-// استفاده از پروکسی برای دور زدن فیلتر IP
-const PROXY_URL = 'https://api.allorigins.win/raw?url=';
+// استفاده از پروکسی جدید و پایدارتر
+const PROXY_URL = 'https://api.codetabs.com/v1/proxy?quest=';
 
 async function getInsCode(symbol) {
   const targetUrl = `https://cdn.tsetmc.com/api/Instrument/GetInstrumentSearch/${encodeURIComponent(symbol)}`;
-  const res = await fetch(PROXY_URL + encodeURIComponent(targetUrl));
+  const res = await fetch(PROXY_URL + encodeURIComponent(targetUrl), {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+  });
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
   const data = await res.json();
   return data.instrumentSearch?.[0]?.insCode || null;
 }
 
 async function getPriceHistory(insCode) {
   const targetUrl = `https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDailyList/${insCode}/0`;
-  const res = await fetch(PROXY_URL + encodeURIComponent(targetUrl));
+  const res = await fetch(PROXY_URL + encodeURIComponent(targetUrl), {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+  });
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
   const data = await res.json();
   return data.closingPrice || [];
 }
