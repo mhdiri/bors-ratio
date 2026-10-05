@@ -14,6 +14,10 @@ export async function onRequest(context) {
     const history1 = await getPriceHistory(insCode1);
     const history2 = await getPriceHistory(insCode2);
 
+    if (!history1 || !history2 || history1.length === 0 || history2.length === 0) {
+      return new Response(JSON.stringify({ error: 'داده‌ای برای این نمادها یافت نشد' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+    }
+
     const map1 = {};
     history1.forEach(item => { map1[item.dEven] = item.pClosing || item.pDrCotVal; });
     
@@ -45,14 +49,19 @@ export async function onRequest(context) {
   }
 }
 
+// استفاده از پروکسی برای دور زدن فیلتر IP
+const PROXY_URL = 'https://api.allorigins.win/raw?url=';
+
 async function getInsCode(symbol) {
-  const res = await fetch(`https://cdn.tsetmc.com/api/Instrument/GetInstrumentSearch/${encodeURIComponent(symbol)}`);
+  const targetUrl = `https://cdn.tsetmc.com/api/Instrument/GetInstrumentSearch/${encodeURIComponent(symbol)}`;
+  const res = await fetch(PROXY_URL + encodeURIComponent(targetUrl));
   const data = await res.json();
   return data.instrumentSearch?.[0]?.insCode || null;
 }
 
 async function getPriceHistory(insCode) {
-  const res = await fetch(`https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDailyList/${insCode}/0`);
+  const targetUrl = `https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDailyList/${insCode}/0`;
+  const res = await fetch(PROXY_URL + encodeURIComponent(targetUrl));
   const data = await res.json();
   return data.closingPrice || [];
 }
