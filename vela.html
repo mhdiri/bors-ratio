@@ -2,19 +2,19 @@
 <html lang="fa">
 <head>
 <meta charset="UTF-8">
-<title>Vela - Bors Ratio</title>
+<title>Vela - TSE Debug</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{width:100%;height:100%;overflow:hidden;background:#131722}
   #chart{width:100%;height:100vh}
-  #log{position:fixed;top:10px;left:10px;background:rgba(0,0,0,.85);padding:10px;border-radius:6px;
-    font-size:11px;font-family:monospace;max-width:400px;z-index:99;white-space:pre-wrap;color:#aed581;
-    direction:ltr;text-align:left}
+  #log{position:fixed;top:10px;left:10px;background:rgba(0,0,0,.9);padding:12px;border-radius:6px;
+    font-size:11px;font-family:monospace;max-width:450px;max-height:90vh;overflow:auto;z-index:99;
+    white-space:pre-wrap;color:#aed581;direction:ltr;text-align:left}
 </style>
 </head>
 <body>
 <div id="chart"></div>
-<div id="log">loading TSE data...</div>
+<div id="log">starting...</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@luxalgo/vela@latest/dist/vela.global.min.js"></script>
 
@@ -22,6 +22,33 @@
 (function(){
   var log = function(m){ document.getElementById('log').innerHTML += '\n' + m; };
   var API = 'https://cdn.tsetmc.com';
+
+  function fetchWithTimeout(url, ms){
+    return new Promise(function(resolve, reject){
+      var controller = new AbortController();
+      var timer = setTimeout(function(){
+        controller.abort();
+        reject(new Error('TIMEOUT after ' + ms + 'ms'));
+      }, ms);
+      fetch(url, { signal: controller.signal })
+        .then(function(r){
+          clearTimeout(timer);
+          log('   status: ' + r.status);
+          resolve(r);
+        })
+        .catch(function(e){
+          clearTimeout(timer);
+          log('   fetch err: ' + e.message);
+          reject(e);
+        });
+    });
+  }
+
+  async function fetchJSON(url){
+    var r = await fetchWithTimeout(url, 8000);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }
 
   function dateToTs(s){
     s = String(s);
@@ -31,32 +58,34 @@
     return Math.floor(new Date(y, m-1, d).getTime() / 1000);
   }
 
-  async function fetchJSON(url){
-    var r = await fetch(url);
-    if(!r.ok) throw new Error('HTTP ' + r.status);
-    return r.json();
-  }
-
   async function getInsCode(symbol){
-    var d = await fetchJSON(API + '/api/Instrument/GetInstrumentSearch/' + encodeURIComponent(symbol));
-    return d.instrumentSearch && d.instrumentSearch[0] ? d.instrumentSearch[0].insCode : null;
+    log('▶ getInsCode: ' + symbol);
+    var url = API + '/api/Instrument/GetInstrumentSearch/' + encodeURIComponent(symbol);
+    log('   url: ' + url.substring(0, 100));
+    var d = await fetchJSON(url);
+    log('   received');
+    var code = d.instrumentSearch && d.instrumentSearch[0] ? d.instrumentSearch[0].insCode : null;
+    log('   code: ' + code);
+    return code;
   }
 
   async function getHistory(code){
-    var d = await fetchJSON(API + '/api/ClosingPrice/GetClosingPriceDailyList/' + code + '/0');
-    return d.closingPriceDaily || d.closingPrice || [];
+    log('▶ getHistory: ' + code);
+    var url = API + '/api/ClosingPrice/GetClosingPriceDailyList/' + code + '/0';
+    var d = await fetchJSON(url);
+    var list = d.closingPriceDaily || d.closingPrice || [];
+    log('   records: ' + list.length);
+    return list;
   }
 
   async function buildRatio(s1, s2){
-    log('fetching: ' + s1 + ' / ' + s2);
+    log('=== BUILD RATIO ===');
     var c1 = await getInsCode(s1);
     var c2 = await getInsCode(s2);
     if (!c1 || !c2) throw new Error('نماد پیدا نشد');
-    log('insCodes: ' + c1 + ', ' + c2);
 
     var h1 = await getHistory(c1);
     var h2 = await getHistory(c2);
-    log('records: ' + h1.length + ', ' + h2.length);
 
     var m1 = {}, m2 = {};
     h1.forEach(function(x){
@@ -88,34 +117,34 @@
       });
       prevClose = rClose;
     }
-    log('bars built: ' + bars.length);
+    log('bars: ' + bars.length);
     return bars;
   }
 
   window.addEventListener('DOMContentLoaded', async function(){
+    log('=== DOM READY ===');
+    log('Vela type: ' + typeof window.Vela);
     if (typeof window.Vela === 'undefined'){
-      log('Vela not loaded');
+      log('❌ Vela not loaded');
       return;
     }
     var VelaClass = window.Vela.Vela || window.Vela;
-    if (typeof VelaClass !== 'function'){ log('no constructor'); return; }
+    if (typeof VelaClass !== 'function'){ log('❌ no constructor'); return; }
 
     try {
       var bars = await buildRatio('شیراز', 'شپدیس');
-      if (!bars.length) { log('NO DATA'); return; }
+      if (!bars.length) { log('❌ NO DATA'); return; }
 
-      log('first bar: ' + new Date(bars[0].time).toISOString().slice(0,10));
-      log('last bar: ' + new Date(bars[bars.length-1].time).toISOString().slice(0,10));
-
+      log('=== CHART INIT ===');
       var chart = new VelaClass('#chart', {
         data: bars,
         timeframe: '1D',
         theme: 'dark',
         priceStyle: 'candles'
       });
-      log('RATIO CHART OK');
+      log('🎉 CHART OK');
     } catch(e){
-      log('ERR: ' + e.message);
+      log('❌ ERR: ' + e.message);
       console.error(e);
     }
   });
