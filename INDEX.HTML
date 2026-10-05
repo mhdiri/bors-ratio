@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نسبت‌سنجی سهام بورس ایران</title>
+    <!-- کتابخانه نمودار TradingView -->
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+        body { font-family: Tahoma, Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        .controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+        input, button { padding: 10px 15px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
+        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        #chart { width: 100%; height: 600px; border: 1px solid #eee; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>نسبت‌سنجی دو سهم بورس ایران</h1>
+        <div class="controls">
+            <input type="text" id="symbol1" value="شیراز" placeholder="نماد اول">
+            <span style="display: flex; align-items: center; font-weight: bold;">/</span>
+            <input type="text" id="symbol2" value="شپدیس" placeholder="نماد دوم">
+            <button onclick="loadRatio()">مقایسه کن</button>
+        </div>
+        <div id="chart"></div>
+    </div>
+
+    <script>
+        let chart;
+        let lineSeries;
+
+        function initChart() {
+            chart = LightweightCharts.createChart(document.getElementById('chart'), {
+                width: document.getElementById('chart').clientWidth,
+                height: 600,
+                layout: { background: { color: '#ffffff' }, textColor: '#333' },
+                grid: { vertLines: { color: '#f0f3fa' }, horzLines: { color: '#f0f3fa' } },
+                crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+                timeScale: { timeVisible: true, secondsVisible: false }
+            });
+            lineSeries = chart.addLineSeries({ color: '#2962FF', lineWidth: 2 });
+        }
+
+        async function loadRatio() {
+            const symbol1 = document.getElementById('symbol1').value;
+            const symbol2 = document.getElementById('symbol2').value;
+
+            try {
+                // درخواست به بک‌اند سایت خودمان
+                const res = await fetch(`/api/ratio?symbol1=${encodeURIComponent(symbol1)}&symbol2=${encodeURIComponent(symbol2)}`);
+                const data = await res.json();
+
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                if (!chart) initChart();
+                lineSeries.setData(data.ratios);
+                chart.timeScale().fitContent();
+            } catch (err) {
+                alert('خطا در دریافت داده‌ها. لطفاً اینترنت خود را بررسی کنید.');
+                console.error(err);
+            }
+        }
+
+        // بارگذاری خودکار در ابتدا
+        window.onload = loadRatio;
+        window.addEventListener('resize', () => {
+            if (chart) chart.applyOptions({ width: document.getElementById('chart').clientWidth });
+        });
+    </script>
+</body>
+</html>
