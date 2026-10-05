@@ -2,57 +2,712 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>دیباگ ۲</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نسبت‌سنجی حرفه‌ای بورس ایران</title>
+<script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
 <style>
-body{font-family:monospace;padding:20px;background:#1e1e1e;color:#aed581;font-size:12px}
-pre{background:#0d1117;padding:15px;border-radius:5px;white-space:pre-wrap;max-height:700px;overflow:auto;border:1px solid #333}
-input,button{padding:8px;margin:5px;background:#2d2d2d;color:#fff;border:1px solid #444;border-radius:4px}
-button{background:#4CAF50;cursor:pointer}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#131722; --panel:#1e222d; --panel2:#2a2e39; --border:#2a2e39;
+  --text:#d1d4dc; --text2:#787b86; --accent:#2962FF; --green:#26a69a; --red:#ef5350;
+  --ma20:#FF6D00; --ma50:#9C27B0; --ma200:#E91E63; --bb:#00BCD4;
+}
+[data-theme="light"]{
+  --bg:#ffffff; --panel:#f0f3fa; --panel2:#e0e3eb; --border:#e0e3eb;
+  --text:#131722; --text2:#787b86;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,Tahoma,Arial;background:var(--bg);color:var(--text);font-size:13px}
+
+/* ============ ساختار اصلی ============ */
+.tv-app{display:grid;grid-template-rows:48px 1fr;height:100vh;width:100vw}
+
+/* ============ نوار بالا ============ */
+.tv-topbar{display:flex;align-items:center;gap:8px;padding:0 12px;background:var(--panel);border-bottom:1px solid var(--border);height:48px;overflow-x:auto;overflow-y:hidden}
+.tv-topbar::-webkit-scrollbar{height:0}
+.tv-topbar>*{flex-shrink:0}
+
+/* لوگو */
+.tv-logo{display:flex;align-items:center;gap:6px;font-weight:bold;color:var(--text);padding:6px 10px;border-radius:4px;font-size:14px}
+.tv-logo-icon{width:22px;height:22px;background:linear-gradient(135deg,#2962FF,#00BCD4);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px}
+
+/* جداکننده */
+.tv-div{width:1px;height:22px;background:var(--border);margin:0 4px}
+
+/* جعبه نماد */
+.symbol-box{display:flex;align-items:center;gap:6px;background:var(--panel2);border-radius:6px;padding:0 4px;height:34px}
+.symbol-box input{background:transparent;border:none;color:var(--text);padding:0 8px;font-family:inherit;font-size:13px;outline:none;width:100px;font-weight:600}
+.symbol-box input::placeholder{color:var(--text2);font-weight:normal}
+.symbol-box .divider{color:var(--text2);font-weight:bold;padding:0 2px}
+.symbol-box .go-btn{background:var(--accent);border:none;color:white;padding:0 12px;height:26px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:bold;margin-left:2px}
+.symbol-box .go-btn:hover{background:#1e4fd8}
+
+/* دکمه‌های نوار */
+.tv-btn{background:transparent;border:none;color:var(--text);padding:0 10px;height:34px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;display:flex;align-items:center;gap:5px;transition:background 0.15s}
+.tv-btn:hover{background:var(--panel2)}
+.tv-btn.active{background:var(--accent);color:white}
+
+/* گروه تایم فریم */
+.tf-group{display:flex;background:var(--panel2);border-radius:6px;padding:2px}
+.tf-btn{background:transparent;border:none;color:var(--text2);padding:0 9px;height:30px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;transition:all 0.15s}
+.tf-btn:hover{color:var(--text)}
+.tf-btn.active{background:var(--accent);color:white}
+
+/* منوی کشویی */
+.dropdown{position:relative}
+.dropdown-menu{position:absolute;top:100%;right:0;margin-top:4px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:6px;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:1000;display:none}
+.dropdown-menu.open{display:block}
+.dropdown-menu label{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:4px;cursor:pointer;font-size:12px;color:var(--text)}
+.dropdown-menu label:hover{background:var(--panel2)}
+.dropdown-menu input[type=checkbox]{cursor:pointer;accent-color:var(--accent)}
+.dropdown-menu .menu-title{font-size:10px;color:var(--text2);padding:6px 10px;text-transform:uppercase;font-weight:bold}
+
+/* ============ بدنه ============ */
+.tv-body{display:grid;grid-template-columns:48px 1fr;height:100%;overflow:hidden}
+
+/* نوار ابزار سمت چپ */
+.tv-leftbar{background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:2px;overflow-y:auto}
+.tv-leftbar::-webkit-scrollbar{width:0}
+.tool-btn{width:36px;height:36px;background:transparent;border:none;color:var(--text2);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.15s}
+.tool-btn:hover{background:var(--panel2);color:var(--text)}
+.tool-btn.active{background:var(--accent);color:white}
+.tv-leftbar .sep{width:24px;height:1px;background:var(--border);margin:6px 0}
+
+/* ناحیه نمودار */
+.tv-chart-area{position:relative;background:var(--bg);overflow:hidden}
+#chart{width:100%;height:100%}
+#rsiChart{position:absolute;bottom:0;right:0;left:0;height:150px;border-top:1px solid var(--border);background:var(--bg);display:none;z-index:5}
+
+/* لجند بالای نمودار */
+.tv-legend{position:absolute;top:10px;right:60px;background:rgba(30,34,45,0.85);border-radius:6px;padding:8px 12px;font-size:12px;z-index:10;backdrop-filter:blur(4px);max-width:calc(100% - 80px);display:none}
+[data-theme="light"] .tv-legend{background:rgba(255,255,255,0.9);border:1px solid var(--border)}
+.tv-legend.show{display:block}
+.tv-legend .title{font-weight:bold;font-size:13px;margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.tv-legend .price{color:var(--accent);font-weight:bold}
+.tv-legend .change{font-weight:bold}
+.tv-legend .change.up{color:var(--green)}
+.tv-legend .change.down{color:var(--red)}
+.tv-legend .row{display:flex;gap:10px;color:var(--text2);font-size:11px;margin-top:3px}
+.tv-legend .row span{color:var(--text)}
+
+/* پنل آمار شناور (بالا چپ) */
+.tv-stats-panel{position:absolute;top:10px;left:10px;background:rgba(30,34,45,0.85);border-radius:6px;padding:10px 12px;font-size:11px;z-index:10;backdrop-filter:blur(4px);display:none;min-width:170px}
+[data-theme="light"] .tv-stats-panel{background:rgba(255,255,255,0.9);border:1px solid var(--border)}
+.tv-stats-panel.show{display:block}
+.tv-stats-panel .stat-row{display:flex;justify-content:space-between;padding:3px 0;gap:15px}
+.tv-stats-panel .stat-row .k{color:var(--text2)}
+.tv-stats-panel .stat-row .v{font-weight:bold;color:var(--text)}
+.tv-stats-panel .stat-row .v.green{color:var(--green)}
+.tv-stats-panel .stat-row .v.red{color:var(--red)}
+.tv-stats-panel .stat-row .v.blue{color:var(--accent)}
+.tv-stats-panel .title{font-weight:bold;color:var(--text);margin-bottom:6px;font-size:12px}
+
+/* سیگنال */
+.tv-signal{position:absolute;bottom:170px;left:10px;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:bold;z-index:10;display:none;backdrop-filter:blur(4px)}
+.tv-signal.show{display:block}
+.tv-signal.buy{background:rgba(38,166,154,0.2);color:var(--green);border:1px solid var(--green)}
+.tv-signal.sell{background:rgba(239,83,80,0.2);color:var(--red);border:1px solid var(--red)}
+.tv-signal.neutral{background:rgba(255,152,0,0.15);color:#FF9800;border:1px solid #FF9800}
+
+/* لودینگ */
+.tv-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text2);background:var(--bg);z-index:20}
+.tv-loading.hide{display:none}
+.tv-spinner{width:36px;height:36px;border:3px solid var(--panel2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:15px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* اطلاعات کراس‌هیر */
+#crosshair-info{position:absolute;top:10px;left:10px;background:var(--panel2);padding:4px 8px;border-radius:4px;font-size:11px;color:var(--text);z-index:8;display:none;font-family:monospace}
+
+/* ریسپانسیو */
+@media(max-width:768px){
+  .tv-logo span{display:none}
+  .symbol-box input{width:80px}
+}
 </style>
 </head>
 <body>
-<h2 style="color:#fff">🐛 دیباگ ۲</h2>
-<input id="s1" value="شیراز">
-<input id="s2" value="شپدیس">
-<button onclick="run()">اجرا</button>
-<pre id="out">آماده...</pre>
-<script>
-const out = document.getElementById('out');
-const log = m => { out.innerHTML += m + '\n'; };
 
-async function fj(url){
-  const r = await fetch(url);
-  return await r.json();
+<div class="tv-app">
+
+  <!-- نوار بالا -->
+  <div class="tv-topbar">
+    <div class="tv-logo">
+      <div class="tv-logo-icon">📊</div>
+      <span>نسبت‌سنج</span>
+    </div>
+
+    <div class="tv-div"></div>
+
+    <!-- ورودی‌های نماد -->
+    <div class="symbol-box">
+      <input list="symbolsList" id="symbol1" placeholder="شیراز" autocomplete="off">
+      <span class="divider">÷</span>
+      <input list="symbolsList" id="symbol2" placeholder="شپدیس" autocomplete="off">
+      <button class="go-btn" id="goBtn" onclick="loadRatio()">تحلیل</button>
+    </div>
+    <datalist id="symbolsList"></datalist>
+
+    <div class="tv-div"></div>
+
+    <!-- تایم فریم‌ها -->
+    <div class="tf-group" id="tfGroup">
+      <button class="tf-btn" data-range="30">۱م</button>
+      <button class="tf-btn" data-range="90">۳م</button>
+      <button class="tf-btn" data-range="180">۶م</button>
+      <button class="tf-btn active" data-range="365">۱س</button>
+      <button class="tf-btn" data-range="1825">۵س</button>
+      <button class="tf-btn" data-range="0">همه</button>
+    </div>
+
+    <div class="tv-div"></div>
+
+    <!-- نوع نمودار -->
+    <div class="tf-group" id="typeGroup">
+      <button class="tf-btn active" data-type="line" onclick="setChartType('line',this)">📈 خط</button>
+      <button class="tf-btn" data-type="area" onclick="setChartType('area',this)">🌊 ناحیه</button>
+    </div>
+
+    <div class="tv-div"></div>
+
+    <!-- اندیکاتورها -->
+    <div class="dropdown">
+      <button class="tv-btn" onclick="toggleDropdown('indMenu',event)">📉 اندیکاتورها ▾</button>
+      <div class="dropdown-menu" id="indMenu">
+        <div class="menu-title">میانگین متحرک</div>
+        <label><input type="checkbox" id="tMA20" checked onchange="redraw()"> <span style="color:var(--ma20)">MA20</span></label>
+        <label><input type="checkbox" id="tMA50" checked onchange="redraw()"> <span style="color:var(--ma50)">MA50</span></label>
+        <label><input type="checkbox" id="tMA200" onchange="redraw()"> <span style="color:var(--ma200)">MA200</span></label>
+        <div class="menu-title">اندیکاتورهای دیگر</div>
+        <label><input type="checkbox" id="tBB" checked onchange="redraw()"> <span style="color:var(--bb)">باندهای بولینگر</span></label>
+        <label><input type="checkbox" id="tMinMax" onchange="redraw()"> خطوط حداکثر/حداقل</label>
+        <label><input type="checkbox" id="tRSI" checked onchange="toggleRSI()"> RSI</label>
+      </div>
+    </div>
+
+    <div class="tv-div"></div>
+
+    <!-- ابزارها -->
+    <button class="tv-btn" onclick="exportCSV()" title="خروجی CSV">📥</button>
+    <button class="tv-btn" onclick="toggleTheme()" id="themeBtn" title="تم">🌙</button>
+    <button class="tv-btn" onclick="toggleStats()" id="statsBtn" title="آمار">📊</button>
+    <button class="tv-btn" onclick="toggleFullscreen()" title="تمام صفحه">⛶</button>
+
+  </div>
+
+  <!-- بدنه -->
+  <div class="tv-body">
+
+    <!-- نوار ابزار سمت چپ -->
+    <div class="tv-leftbar">
+      <button class="tool-btn active" title="کراس‌هیر">✛</button>
+      <button class="tool-btn" title="خط روند">╱</button>
+      <button class="tool-btn" title="خط افقی">─</button>
+      <div class="sep"></div>
+      <button class="tool-btn" title="فیبوناچی">f</button>
+      <button class="tool-btn" title="مستطیل">▭</button>
+      <button class="tool-btn" title="متن">T</button>
+      <div class="sep"></div>
+      <button class="tool-btn" onclick="resetZoom()" title="بازنشانی زوم">⟲</button>
+    </div>
+
+    <!-- ناحیه نمودار -->
+    <div class="tv-chart-area" id="chartArea">
+
+      <div id="chart"></div>
+      <div id="rsiChart"></div>
+
+      <!-- لجند -->
+      <div class="tv-legend" id="legend">
+        <div class="title">
+          <span id="legSymbol">-</span>
+          <span class="price" id="legPrice">-</span>
+          <span class="change" id="legChange">-</span>
+        </div>
+        <div class="row">دوره: <span id="legRange">-</span></div>
+      </div>
+
+      <!-- پنل آمار -->
+      <div class="tv-stats-panel" id="statsPanel">
+        <div class="title">📊 آمار نسبت</div>
+        <div class="stat-row"><span class="k">نسبت فعلی</span><span class="v blue" id="sCurrent">-</span></div>
+        <div class="stat-row"><span class="k">تغییر کل</span><span class="v" id="sChange">-</span></div>
+        <div class="stat-row"><span class="k">میانگین</span><span class="v" id="sMean">-</span></div>
+        <div class="stat-row"><span class="k">انحراف معیار</span><span class="v" id="sStd">-</span></div>
+        <div class="stat-row"><span class="k">Z-Score</span><span class="v" id="sZ">-</span></div>
+        <div class="stat-row"><span class="k">صدک تاریخی</span><span class="v" id="sPct">-</span></div>
+      </div>
+
+      <!-- سیگنال -->
+      <div class="tv-signal" id="signalBox"></div>
+
+      <!-- اطلاعات کراس‌هیر -->
+      <div id="crosshair-info"></div>
+
+      <!-- لودینگ -->
+      <div class="tv-loading" id="loading">
+        <div class="tv-spinner"></div>
+        <div>برای شروع، دو نماد را وارد کنید</div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+/* ============ ابزارهای کمکی ============ */
+const log = () => {}; // دیگر لاگ نمایش نمی‌دهیم
+
+// تبدیل تاریخ میلادی YYYYMMDD به Unix timestamp
+function gregorianToTs(s){
+  s = String(s);
+  if(s.length !== 8) return null;
+  const y = parseInt(s.substring(0,4));
+  const m = parseInt(s.substring(4,6));
+  const d = parseInt(s.substring(6,8));
+  if(y < 1990 || y > 2100 || m < 1 || m > 12 || d < 1 || d > 31) return null;
+  return Math.floor(new Date(y, m-1, d).getTime()/1000);
 }
 
-async function run(){
-  out.innerHTML = '';
+async function fetchJSON(url){
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  return await res.json();
+}
+
+/* ============ تم ============ */
+function toggleTheme(){
+  const isDark = document.body.getAttribute('data-theme') !== 'light';
+  document.body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙';
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  redraw();
+}
+if(localStorage.getItem('theme') === 'light'){
+  document.body.setAttribute('data-theme', 'light');
+  document.getElementById('themeBtn').innerText = '☀️';
+}
+
+/* ============ منوها ============ */
+function toggleDropdown(id, ev){
+  ev.stopPropagation();
+  const menu = document.getElementById(id);
+  document.querySelectorAll('.dropdown-menu').forEach(m => {
+    if(m.id !== id) m.classList.remove('open');
+  });
+  menu.classList.toggle('open');
+}
+document.addEventListener('click', () => {
+  document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
+});
+document.querySelectorAll('.dropdown-menu').forEach(m => {
+  m.addEventListener('click', e => e.stopPropagation());
+});
+
+/* ============ ورودی‌ها ============ */
+let allSymbols = [];
+async function loadAllSymbols(){
   try {
-    const s1 = document.getElementById('s1').value.trim();
-    const s2 = document.getElementById('s2').value.trim();
-
-    const r1 = await fj('https://cdn.tsetmc.com/api/Instrument/GetInstrumentSearch/' + encodeURIComponent(s1));
-    const r2 = await fj('https://cdn.tsetmc.com/api/Instrument/GetInstrumentSearch/' + encodeURIComponent(s2));
-    const c1 = r1.instrumentSearch?.[0]?.insCode;
-    const c2 = r2.instrumentSearch?.[0]?.insCode;
-    log('کد ۱: ' + c1 + ' | کد ۲: ' + c2);
-
-    for(const mode of ['0', '1']){
-      log('\n=== حالت /' + mode + ' ===');
-      const d1 = await fj('https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDailyList/' + c1 + '/' + mode);
-      log('کلیدها: ' + Object.keys(d1).join(', '));
-      const list = d1.closingPriceDaily || d1.closingPrice || d1.closingPriceList || [];
-      log('تعداد: ' + list.length);
-      if(list.length){
-        log('اولین: ' + JSON.stringify(list[0]).substring(0, 200));
-        log('آخرین: ' + JSON.stringify(list[list.length-1]).substring(0, 200));
-      }
-    }
+    const url = 'https://cdn.tsetmc.com/api/ClosingPrice/GetMarketWatch?market=0&paperTypes%5B0%5D=1&paperTypes%5B1%5D=2&paperTypes%5B2%5D=3&paperTypes%5B3%5D=4&paperTypes%5B4%5D=5&paperTypes%5B5%5D=6&paperTypes%5B6%5D=7&paperTypes%5B7%5D=8&paperTypes%5B8%5D=9&withBestLimits=false&hEven=0&RefID=0';
+    const d = await fetchJSON(url);
+    const list = d.marketwatch || d.marketWatch || d.closingPrice || [];
+    allSymbols = list.map(x => ({
+      code: x.insCode,
+      symbol: (x.lVal18AFC || '').trim(),
+      name: (x.lVal30 || '').trim()
+    })).filter(x => x.symbol && x.code);
+    const dl = document.getElementById('symbolsList');
+    dl.innerHTML = allSymbols.map(x => '<option value="' + x.symbol + '">' + x.name + '</option>').join('');
   } catch(e){
-    log('❌ ' + e.message);
+    console.error('list load error', e);
   }
 }
-run();
+
+function findSymbolCode(sym){
+  const f = allSymbols.find(x => x.symbol === sym.trim());
+  return f ? f.code : null;
+}
+
+async function getInsCode(sym){
+  const local = findSymbolCode(sym);
+  if(local) return local;
+  const d = await fetchJSON('https://cdn.tsetmc.com/api/Instrument/GetInstrumentSearch/' + encodeURIComponent(sym));
+  return d.instrumentSearch?.[0]?.insCode || null;
+}
+
+async function getHistory(code){
+  const d = await fetchJSON('https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDailyList/' + code + '/0');
+  return d.closingPriceDaily || d.closingPrice || [];
+}
+
+/* ============ اندیکاتورها ============ */
+function calcMA(data, period){
+  const out = [];
+  for(let i=period-1; i<data.length; i++){
+    let s = 0;
+    for(let j=0; j<period; j++) s += data[i-j].value;
+    out.push({ time: data[i].time, value: s/period });
+  }
+  return out;
+}
+
+function calcBB(data, period=20, mult=2){
+  const upper = [], lower = [];
+  for(let i=period-1; i<data.length; i++){
+    let sum = 0;
+    for(let j=0; j<period; j++) sum += data[i-j].value;
+    const ma = sum/period;
+    let variance = 0;
+    for(let j=0; j<period; j++) variance += Math.pow(data[i-j].value - ma, 2);
+    const std = Math.sqrt(variance/period);
+    upper.push({ time: data[i].time, value: ma + mult*std });
+    lower.push({ time: data[i].time, value: ma - mult*std });
+  }
+  return { upper, lower };
+}
+
+function calcRSI(data, period=14){
+  if(data.length < period+1) return [];
+  const out = [];
+  let gains = 0, losses = 0;
+  for(let i=1; i<=period; i++){
+    const diff = data[i].value - data[i-1].value;
+    if(diff >= 0) gains += diff; else losses -= diff;
+  }
+  let avgGain = gains/period, avgLoss = losses/period;
+  out.push({ time: data[period].time, value: 100 - 100/(1 + avgGain/(avgLoss||0.0001)) });
+  for(let i=period+1; i<data.length; i++){
+    const diff = data[i].value - data[i-1].value;
+    const g = diff > 0 ? diff : 0;
+    const l = diff < 0 ? -diff : 0;
+    avgGain = (avgGain*(period-1) + g)/period;
+    avgLoss = (avgLoss*(period-1) + l)/period;
+    out.push({ time: data[i].time, value: 100 - 100/(1 + avgGain/(avgLoss||0.0001)) });
+  }
+  return out;
+}
+
+function calcStats(ratios){
+  const vals = ratios.map(r => r.value);
+  const n = vals.length;
+  const mean = vals.reduce((a,b) => a+b, 0) / n;
+  const variance = vals.reduce((a,b) => a + Math.pow(b-mean, 2), 0) / n;
+  const std = Math.sqrt(variance);
+  const sorted = [...vals].sort((a,b) => a-b);
+  const current = vals[n-1];
+  const zScore = std > 0 ? (current - mean) / std : 0;
+  const pct = (sorted.filter(v => v <= current).length / n * 100).toFixed(1);
+  return { mean, std, min: sorted[0], max: sorted[n-1], current, zScore, pct: parseFloat(pct), n };
+}
+
+/* ============ نمودار ============ */
+let chart, rsiChart;
+let series = {};
+let allRatios = [];       // کل داده‌ها
+let currentRatios = [];   // داده‌های فیلتر شده بر اساس تایم‌فریم
+let currentChartType = 'line';
+let currentRange = 365;
+let currentSymbolName = '';
+
+function getChartOptions(el, h){
+  const isDark = document.body.getAttribute('data-theme') !== 'light';
+  const bg = isDark ? '#131722' : '#ffffff';
+  const grid = isDark ? '#1e222d' : '#f0f3fa';
+  const text = isDark ? '#d1d4dc' : '#131722';
+  const border = isDark ? '#2a2e39' : '#e0e3eb';
+  return {
+    width: el.clientWidth,
+    height: h,
+    layout: { background: { color: bg }, textColor: text, fontSize: 11 },
+    grid: { vertLines: { color: grid }, horzLines: { color: grid } },
+    timeScale: { timeVisible: false, secondsVisible: false, borderColor: border },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+    rightPriceScale: { borderColor: border, scaleMargins: { top: 0.1, bottom: 0.1 } }
+  };
+}
+
+function initCharts(){
+  const chartEl = document.getElementById('chart');
+  chartEl.innerHTML = '';
+  if(chart){ chart.remove(); chart = null; }
+  if(rsiChart){ rsiChart.remove(); rsiChart = null; }
+  chart = LightweightCharts.createChart(chartEl, getChartOptions(chartEl, chartEl.clientHeight || 500));
+
+  if(currentChartType === 'area'){
+    series.ratio = chart.addAreaSeries({
+      lineColor: '#2962FF', topColor: 'rgba(41,98,255,0.4)', bottomColor: 'rgba(41,98,255,0.02)',
+      lineWidth: 2, title: 'نسبت'
+    });
+  } else {
+    series.ratio = chart.addLineSeries({ color: '#2962FF', lineWidth: 2, title: 'نسبت' });
+  }
+
+  series.ma20 = chart.addLineSeries({ color: '#FF6D00', lineWidth: 1, title: 'MA20' });
+  series.ma50 = chart.addLineSeries({ color: '#9C27B0', lineWidth: 1, title: 'MA50' });
+  series.ma200 = chart.addLineSeries({ color: '#E91E63', lineWidth: 1, title: 'MA200' });
+  series.bbUpper = chart.addLineSeries({ color: '#00BCD4', lineWidth: 1, lineStyle: 2, title: 'BB+' });
+  series.bbLower = chart.addLineSeries({ color: '#00BCD4', lineWidth: 1, lineStyle: 2, title: 'BB-' });
+  series.maxLine = chart.addLineSeries({ color: '#f44336', lineWidth: 1, lineStyle: 2 });
+  series.minLine = chart.addLineSeries({ color: '#4CAF50', lineWidth: 1, lineStyle: 2 });
+
+  // همگام‌سازی زمان بین دو نمودار
+  chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+    if(rsiChart && range) rsiChart.timeScale().setVisibleLogicalRange(range);
+  });
+  if(rsiChart){
+    rsiChart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+      if(chart && range) chart.timeScale().setVisibleLogicalRange(range);
+    });
+  }
+
+  // کراس‌هیر
+  chart.subscribeCrosshairMove(param => {
+    const info = document.getElementById('crosshair-info');
+    if(!param.time || !currentRatios.length){ info.style.display = 'none'; return; }
+    const found = currentRatios.find(r => r.time === param.time);
+    if(!found){ info.style.display = 'none'; return; }
+    const d = new Date(param.time * 1000).toLocaleDateString('fa-IR');
+    info.innerText = d + '  |  نسبت: ' + found.value.toFixed(4);
+    info.style.display = 'block';
+  });
+
+  // RSI chart
+  const rsiEl = document.getElementById('rsiChart');
+  rsiChart = LightweightCharts.createChart(rsiEl, getChartOptions(rsiEl, 150));
+  series.rsi = rsiChart.addLineSeries({ color: '#FF9800', lineWidth: 2, title: 'RSI' });
+  series.rsi70 = rsiChart.addLineSeries({ color: '#ef5350', lineWidth: 1, lineStyle: 2 });
+  series.rsi30 = rsiChart.addLineSeries({ color: '#26a69a', lineWidth: 1, lineStyle: 2 });
+
+  if(document.getElementById('tRSI').checked) rsiEl.style.display = 'block';
+}
+
+function setChartType(type, btn){
+  currentChartType = type;
+  document.querySelectorAll('#typeGroup .tf-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if(currentRatios.length) redraw();
+}
+
+function resetZoom(){
+  if(chart) chart.timeScale().fitContent();
+  if(rsiChart) rsiChart.timeScale().fitContent();
+}
+
+function toggleRSI(){
+  const el = document.getElementById('rsiChart');
+  el.style.display = document.getElementById('tRSI').checked ? 'block' : 'none';
+  if(chart) setTimeout(() => {
+    chart.applyOptions({width: document.getElementById('chart').clientWidth});
+    if(rsiChart) rsiChart.applyOptions({width: el.clientWidth});
+  }, 50);
+}
+
+function toggleStats(){
+  const p = document.getElementById('statsPanel');
+  const b = document.getElementById('statsBtn');
+  p.classList.toggle('show');
+  b.style.background = p.classList.contains('show') ? 'var(--panel2)' : 'transparent';
+}
+
+function toggleFullscreen(){
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+function redraw(){
+  if(!currentRatios.length || !chart) return;
+  const ratios = currentChartType === 'ratio-log'
+    ? currentRatios.map(r => ({time: r.time, value: Math.log(r.value)}))
+    : currentRatios;
+
+  series.ratio.setData(ratios);
+
+  const applyMA = (id, period, s) => {
+    if(document.getElementById(id).checked && ratios.length > period) s.setData(calcMA(ratios, period));
+    else s.setData([]);
+  };
+  applyMA('tMA20', 20, series.ma20);
+  applyMA('tMA50', 50, series.ma50);
+  applyMA('tMA200', 200, series.ma200);
+
+  if(document.getElementById('tBB').checked && ratios.length > 20){
+    const bb = calcBB(ratios, 20, 2);
+    series.bbUpper.setData(bb.upper);
+    series.bbLower.setData(bb.lower);
+  } else {
+    series.bbUpper.setData([]); series.bbLower.setData([]);
+  }
+
+  if(document.getElementById('tMinMax').checked){
+    const stats = calcStats(ratios);
+    const f = ratios[0].time, l = ratios[ratios.length-1].time;
+    series.maxLine.setData([{time:f, value:stats.max}, {time:l, value:stats.max}]);
+    series.minLine.setData([{time:f, value:stats.min}, {time:l, value:stats.min}]);
+  } else {
+    series.maxLine.setData([]); series.minLine.setData([]);
+  }
+
+  // RSI
+  if(document.getElementById('tRSI').checked && rsiChart){
+    const rsiData = calcRSI(ratios, 14);
+    if(rsiData.length){
+      document.getElementById('rsiChart').style.display = 'block';
+      series.rsi.setData(rsiData);
+      series.rsi70.setData(rsiData.map(r => ({time: r.time, value: 70})));
+      series.rsi30.setData(rsiData.map(r => ({time: r.time, value: 30})));
+    }
+  }
+
+  chart.timeScale().fitContent();
+  if(rsiChart) rsiChart.timeScale().fitContent();
+}
+
+/* ============ فیلتر تایم‌فریم ============ */
+document.querySelectorAll('#tfGroup .tf-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#tfGroup .tf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentRange = parseInt(btn.dataset.range);
+    applyRangeFilter();
+    if(currentRatios.length) redraw();
+  });
+});
+
+function applyRangeFilter(){
+  if(!allRatios.length) return;
+  if(currentRange === 0){ currentRatios = allRatios.slice(); return; }
+  const lastT = allRatios[allRatios.length-1].time;
+  const minT = lastT - currentRange * 86400;
+  currentRatios = allRatios.filter(r => r.time >= minT);
+}
+
+/* ============ بارگذاری و تحلیل ============ */
+async function loadRatio(){
+  const btn = document.getElementById('goBtn');
+  btn.disabled = true;
+  document.getElementById('loading').classList.remove('hide');
+  document.getElementById('loading').innerHTML = '<div class="tv-spinner"></div><div>در حال دریافت داده...</div>';
+  document.getElementById('legend').classList.remove('show');
+  document.getElementById('statsPanel').classList.remove('show');
+  document.getElementById('signalBox').classList.remove('show');
+
+  try {
+    const s1 = document.getElementById('symbol1').value.trim();
+    const s2 = document.getElementById('symbol2').value.trim();
+    if(!s1 || !s2){ alert('هر دو نماد را وارد کنید'); btn.disabled = false; return; }
+
+    const c1 = await getInsCode(s1);
+    const c2 = await getInsCode(s2);
+    if(!c1){ alert('نماد "' + s1 + '" پیدا نشد'); btn.disabled = false; return; }
+    if(!c2){ alert('نماد "' + s2 + '" پیدا نشد'); btn.disabled = false; return; }
+
+    const h1 = await getHistory(c1);
+    const h2 = await getHistory(c2);
+    if(!h1.length || !h2.length){ alert('داده خالی'); btn.disabled = false; return; }
+
+    const m1 = {}, m2 = {};
+    h1.forEach(x => { const p = x.pClosing || x.pDrCotVal; if(p>0) m1[String(x.dEven)] = p; });
+    h2.forEach(x => { const p = x.pClosing || x.pDrCotVal; if(p>0) m2[String(x.dEven)] = p; });
+
+    const dates = Object.keys(m1).filter(d => m2[d]).sort();
+    const unique = {};
+    for(const d of dates){
+      const ts = gregorianToTs(d);
+      if(ts === null) continue;
+      unique[ts] = { time: ts, value: m1[d] / m2[d] };
+    }
+    allRatios = Object.values(unique).sort((a,b) => a.time - b.time);
+
+    if(allRatios.length < 2){ alert('داده کافی نیست'); btn.disabled = false; return; }
+
+    // اعمال تایم‌فریم فعلی
+    applyRangeFilter();
+
+    const stats = calcStats(currentRatios);
+
+    // لجند بالای نمودار
+    document.getElementById('legend').classList.add('show');
+    document.getElementById('legSymbol').innerText = s1 + ' / ' + s2;
+    document.getElementById('legPrice').innerText = stats.current.toFixed(4);
+    const change = ((stats.current - currentRatios[0].value) / currentRatios[0].value * 100).toFixed(2);
+    const chEl = document.getElementById('legChange');
+    chEl.innerText = (change >= 0 ? '+' : '') + change + '%';
+    chEl.className = 'change ' + (change >= 0 ? 'up' : 'down');
+    const d1 = new Date(currentRatios[0].time*1000).toLocaleDateString('fa-IR');
+    const d2 = new Date(currentRatios[currentRatios.length-1].time*1000).toLocaleDateString('fa-IR');
+    document.getElementById('legRange').innerText = d1 + ' تا ' + d2;
+
+    // آمار
+    document.getElementById('sCurrent').innerText = stats.current.toFixed(4);
+    document.getElementById('sChange').innerText = (change >= 0 ? '+' : '') + change + '%';
+    document.getElementById('sChange').className = 'v ' + (change >= 0 ? 'green' : 'red');
+    document.getElementById('sMean').innerText = stats.mean.toFixed(4);
+    document.getElementById('sStd').innerText = stats.std.toFixed(4);
+    document.getElementById('sZ').innerText = stats.zScore.toFixed(2);
+    document.getElementById('sPct').innerText = stats.pct + '%';
+
+    // سیگنال
+    const sig = document.getElementById('signalBox');
+    sig.classList.add('show');
+    let text, cls;
+    if(stats.zScore > 2){ text = '🔴 اشباع خرید | Z=' + stats.zScore.toFixed(2); cls = 'sell'; }
+    else if(stats.zScore < -2){ text = '🟢 اشباع فروش | Z=' + stats.zScore.toFixed(2); cls = 'buy'; }
+    else if(stats.zScore > 1){ text = '🟠 بالاتر از میانگین | Z=' + stats.zScore.toFixed(2); cls = 'neutral'; }
+    else if(stats.zScore < -1){ text = '🟡 پایین‌تر از میانگین | Z=' + stats.zScore.toFixed(2); cls = 'neutral'; }
+    else { text = '⚪ نرمال | Z=' + stats.zScore.toFixed(2); cls = 'neutral'; }
+    sig.innerText = text;
+    sig.className = 'tv-signal show ' + cls;
+
+    // نمایش پنل آمار
+    document.getElementById('statsPanel').classList.add('show');
+    document.getElementById('statsBtn').style.background = 'var(--panel2)';
+
+    // رسم
+    document.getElementById('loading').classList.add('hide');
+    initCharts();
+    redraw();
+
+    localStorage.setItem('lastSymbol1', s1);
+    localStorage.setItem('lastSymbol2', s2);
+
+  } catch(e) {
+    document.getElementById('loading').innerHTML = '❌ خطا: ' + e.message;
+    alert('خطا: ' + e.message);
+  }
+  btn.disabled = false;
+}
+
+/* ============ خروجی CSV ============ */
+function exportCSV(){
+  if(!currentRatios.length){ alert('ابتدا تحلیل کنید'); return; }
+  const s1 = document.getElementById('symbol1').value;
+  const s2 = document.getElementById('symbol2').value;
+  let csv = 'date,ratio\n';
+  currentRatios.forEach(r => {
+    const d = new Date(r.time * 1000).toISOString().split('T')[0];
+    csv += d + ',' + r.value + '\n';
+  });
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = s1 + '_' + s2 + '_ratio.csv';
+  a.click();
+}
+
+/* ============ ریسایز ============ */
+window.addEventListener('resize', () => {
+  if(chart) chart.applyOptions({width: document.getElementById('chart').clientWidth, height: document.getElementById('chart').clientHeight});
+  if(rsiChart) rsiChart.applyOptions({width: document.getElementById('rsiChart').clientWidth});
+});
+
+/* ============ شروع ============ */
+loadAllSymbols();
+
+const ls1 = localStorage.getItem('lastSymbol1') || 'شیراز';
+const ls2 = localStorage.getItem('lastSymbol2') || 'شپدیس';
+document.getElementById('symbol1').value = ls1;
+document.getElementById('symbol2').value = ls2;
 </script>
 </body>
 </html>
