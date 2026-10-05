@@ -14,53 +14,109 @@
 </head>
 <body>
 <div id="chart"></div>
-<div id="log">loading...</div>
+<div id="log">loading TSE data...</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@luxalgo/vela@latest/dist/vela.global.min.js"></script>
 
 <script>
 (function(){
   var log = function(m){ document.getElementById('log').innerHTML += '\n' + m; };
+  var API = 'https://cdn.tsetmc.com';
 
-  window.addEventListener('DOMContentLoaded', function(){
-    log('window.Vela: ' + typeof window.Vela);
-    if (window.Vela) log('keys: ' + Object.keys(window.Vela).join(','));
+  function dateToTs(s){
+    s = String(s);
+    if (s.length !== 8) return null;
+    var y = +s.slice(0,4), m = +s.slice(4,6), d = +s.slice(6,8);
+    if (y<1990||y>2100||m<1||m>12||d<1||d>31) return null;
+    return Math.floor(new Date(y, m-1, d).getTime() / 1000);
+  }
 
-    var VelaClass = (window.Vela && window.Vela.Vela) ? window.Vela.Vela : window.Vela;
-    if (typeof VelaClass !== 'function') {
-      log('NO CONSTRUCTOR');
+  async function fetchJSON(url){
+    var r = await fetch(url);
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }
+
+  async function getInsCode(symbol){
+    var d = await fetchJSON(API + '/api/Instrument/GetInstrumentSearch/' + encodeURIComponent(symbol));
+    return d.instrumentSearch && d.instrumentSearch[0] ? d.instrumentSearch[0].insCode : null;
+  }
+
+  async function getHistory(code){
+    var d = await fetchJSON(API + '/api/ClosingPrice/GetClosingPriceDailyList/' + code + '/0');
+    return d.closingPriceDaily || d.closingPrice || [];
+  }
+
+  async function buildRatio(s1, s2){
+    log('fetching: ' + s1 + ' / ' + s2);
+    var c1 = await getInsCode(s1);
+    var c2 = await getInsCode(s2);
+    if (!c1 || !c2) throw new Error('نماد پیدا نشد');
+    log('insCodes: ' + c1 + ', ' + c2);
+
+    var h1 = await getHistory(c1);
+    var h2 = await getHistory(c2);
+    log('records: ' + h1.length + ', ' + h2.length);
+
+    var m1 = {}, m2 = {};
+    h1.forEach(function(x){
+      var c = x.pClosing || x.pDrCotVal;
+      if (c > 0) m1[String(x.dEven)] = c;
+    });
+    h2.forEach(function(x){
+      var c = x.pClosing || x.pDrCotVal;
+      if (c > 0) m2[String(x.dEven)] = c;
+    });
+
+    var dates = Object.keys(m1).filter(function(d){ return m2[d]; }).sort();
+    log('common dates: ' + dates.length);
+
+    var bars = [], prevClose = null;
+    for (var i = 0; i < dates.length; i++){
+      var d = dates[i];
+      var ts = dateToTs(d);
+      if (ts === null) continue;
+      var rClose = m1[d] / m2[d];
+      var rOpen = prevClose !== null ? prevClose : rClose;
+      bars.push({
+        time: ts * 1000,
+        open: rOpen,
+        high: Math.max(rOpen, rClose),
+        low: Math.min(rOpen, rClose),
+        close: rClose,
+        volume: 0
+      });
+      prevClose = rClose;
+    }
+    log('bars built: ' + bars.length);
+    return bars;
+  }
+
+  window.addEventListener('DOMContentLoaded', async function(){
+    if (typeof window.Vela === 'undefined'){
+      log('Vela not loaded');
       return;
     }
-    log('OK constructor');
-
-    var bars = [], price = 100;
-    var start = new Date(2024, 0, 1);
-    for (var i = 0; i < 250; i++) {
-      var d = new Date(start); d.setDate(start.getDate() + i);
-      var open = price;
-      price += (Math.random() - 0.5) * 4;
-      var close = price;
-      bars.push({
-        time: d.getTime(),
-        open: +open.toFixed(3),
-        high: +(Math.max(open, close) + Math.random() * 2).toFixed(3),
-        low: +(Math.min(open, close) - Math.random() * 2).toFixed(3),
-        close: +close.toFixed(3),
-        volume: Math.floor(Math.random() * 100000)
-      });
-    }
-    log('bars: ' + bars.length);
+    var VelaClass = window.Vela.Vela || window.Vela;
+    if (typeof VelaClass !== 'function'){ log('no constructor'); return; }
 
     try {
+      var bars = await buildRatio('شیراز', 'شپدیس');
+      if (!bars.length) { log('NO DATA'); return; }
+
+      log('first bar: ' + new Date(bars[0].time).toISOString().slice(0,10));
+      log('last bar: ' + new Date(bars[bars.length-1].time).toISOString().slice(0,10));
+
       var chart = new VelaClass('#chart', {
         data: bars,
         timeframe: '1D',
         theme: 'dark',
         priceStyle: 'candles'
       });
-      log('CHART OK');
-    } catch(e) {
+      log('RATIO CHART OK');
+    } catch(e){
       log('ERR: ' + e.message);
+      console.error(e);
     }
   });
 })();
