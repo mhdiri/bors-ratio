@@ -3,58 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نسبت‌سنجی سهام بورس ایران</title>
+<title>نسبت‌سنجی حرفه‌ای سهام بورس ایران</title>
 <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
 <style>
-*{box-sizing:border-box}
-body{font-family:Tahoma,Arial;background:#eef1f6;margin:0;padding:20px;color:#333}
-.container{max-width:1300px;margin:0 auto}
-h1{text-align:center;color:#1a237e;margin:0 0 5px}
-.subtitle{text-align:center;color:#666;font-size:13px;margin-bottom:20px}
-.card{background:white;padding:20px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.06);margin-bottom:15px}
-.controls{display:grid;grid-template-columns:1fr auto 1fr auto;gap:12px;align-items:end}
+:root{
+  --bg:#eef1f6; --card:#fff; --text:#333; --text-light:#666; --border:#d0d7de;
+  --primary:#2962FF; --ma20:#FF6D00; --ma50:#9C27B0; --ma200:#E91E63;
+  --bb:#00BCD4; --rsi:#FF9800; --green:#4CAF50; --red:#f44336;
+  --shadow:0 2px 10px rgba(0,0,0,0.06);
+}
+[data-theme="dark"]{
+  --bg:#0d1117; --card:#161b22; --text:#e6edf3; --text-light:#8b949e; --border:#30363d;
+  --shadow:0 2px 10px rgba(0,0,0,0.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Tahoma,Arial;background:var(--bg);padding:20px;color:var(--text);transition:all 0.3s}
+.container{max-width:1500px;margin:0 auto}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+h1{font-size:22px;color:var(--text)}
+h1 span{color:var(--primary)}
+.subtitle{color:var(--text-light);font-size:12px;margin-top:3px}
+.header-buttons{display:flex;gap:8px}
+.icon-btn{background:var(--card);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;transition:all 0.2s}
+.icon-btn:hover{border-color:var(--primary);color:var(--primary)}
+.icon-btn.active{background:var(--primary);color:white;border-color:var(--primary)}
+.card{background:var(--card);padding:20px;border-radius:12px;box-shadow:var(--shadow);margin-bottom:15px;transition:all 0.3s}
+.controls{display:grid;grid-template-columns:1fr auto 1fr auto auto;gap:10px;align-items:end}
 .field{display:flex;flex-direction:column;gap:5px}
-.field label{font-size:12px;color:#666;font-weight:bold}
-.field input{padding:11px;border:1px solid #d0d7de;border-radius:8px;font-size:15px;font-family:inherit;transition:border 0.2s}
-.field input:focus{outline:none;border-color:#4CAF50;box-shadow:0 0 0 3px rgba(76,175,80,0.1)}
-.btn{padding:11px 24px;background:#4CAF50;color:white;border:none;border-radius:8px;font-size:15px;cursor:pointer;font-family:inherit;height:44px;font-weight:bold}
-.btn:hover{background:#45a049}
-.btn:disabled{background:#ccc;cursor:not-allowed}
-.info{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;padding:15px;background:#f8f9fa;border-radius:10px;margin-bottom:15px;font-size:13px;display:none}
-.info.show{display:grid}
-.info-item{text-align:center;padding:8px;background:white;border-radius:6px}
-.info-item .label{color:#666;display:block;margin-bottom:4px;font-size:11px}
-.info-item .value{font-weight:bold;color:#1a237e;font-size:16px}
-#chart{width:100%;height:600px;border-radius:8px;background:#fafbfc}
+.field label{font-size:11px;color:var(--text-light);font-weight:bold;text-transform:uppercase}
+.field input,.field select{padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:var(--card);color:var(--text);transition:all 0.2s}
+.field input:focus,.field select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(41,98,255,0.1)}
+.btn{padding:10px 24px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;height:42px;font-weight:bold;transition:all 0.2s}
+.btn:hover{background:#1e4fd8;transform:translateY(-1px)}
+.btn:disabled{background:#ccc;cursor:not-allowed;transform:none}
+.status{font-size:11px;color:var(--text-light);margin-top:8px}
+.status.ok{color:var(--green)}
+.status.err{color:var(--red)}
+
+/* پنل آمار */
+.stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:15px}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;transition:all 0.2s}
+.stat-box:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.stat-box .label{font-size:11px;color:var(--text-light);display:block;margin-bottom:5px}
+.stat-box .value{font-size:16px;font-weight:bold;color:var(--text)}
+.stat-box.primary .value{color:var(--primary)}
+.stat-box.green .value{color:var(--green)}
+.stat-box.red .value{color:var(--red)}
+.stat-box.orange .value{color:var(--ma20)}
+
+/* سیگنال */
+.signal-box{padding:14px;border-radius:10px;text-align:center;margin-bottom:15px;font-weight:bold;font-size:15px;border:2px solid}
+.signal-buy{background:rgba(76,175,80,0.1);border-color:var(--green);color:var(--green)}
+.signal-sell{background:rgba(244,67,54,0.1);border-color:var(--red);color:var(--red)}
+.signal-neutral{background:rgba(255,152,0,0.1);border-color:var(--rsi);color:var(--rsi)}
+
+/* نمودار */
+.chart-tabs{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap}
+.tab{padding:6px 14px;background:transparent;border:1px solid var(--border);color:var(--text-light);border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;transition:all 0.2s}
+.tab.active{background:var(--primary);color:white;border-color:var(--primary)}
+.chart-wrapper{position:relative}
+#chart{width:100%;height:500px;border-radius:8px}
+#rsiChart{width:100%;height:150px;border-radius:8px;margin-top:8px;display:none}
+.legend{display:flex;gap:15px;justify-content:center;margin-top:10px;font-size:12px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:6px;color:var(--text-light)}
+.legend-color{width:18px;height:3px;border-radius:2px}
+
+/* چک‌باکس‌ها */
+.toggles{display:flex;gap:15px;flex-wrap:wrap;margin-bottom:12px;padding:10px;background:var(--bg);border-radius:8px}
+.toggle{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);cursor:pointer}
+.toggle input{cursor:pointer;width:16px;height:16px}
+
+/* لودینگ */
+.loading{text-align:center;padding:80px 20px;color:var(--text-light);font-size:15px}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 15px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
 #log{background:#1e1e1e;color:#aed581;padding:10px 15px;border-radius:8px;font-family:monospace;font-size:11px;white-space:pre-wrap;max-height:100px;overflow:auto;display:none;direction:ltr;text-align:left;margin-bottom:15px}
 #log.active{display:block}
-.legend{display:flex;gap:25px;justify-content:center;margin-top:15px;font-size:13px;flex-wrap:wrap}
-.legend-item{display:flex;align-items:center;gap:8px}
-.legend-color{width:22px;height:3px;border-radius:2px}
-.loading{text-align:center;padding:60px;color:#999;font-size:15px}
-.status{font-size:11px;color:#999;margin-top:6px}
-.status.ok{color:#4CAF50}
-.status.err{color:#f44336}
-@media(max-width:768px){.controls{grid-template-columns:1fr}.info{grid-template-columns:repeat(2,1fr)}}
+
+@media(max-width:900px){.controls{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 <div class="container">
-<h1>📊 نسبت‌سنجی سهام بورس ایران</h1>
-<div class="subtitle">نسبت قیمت هر دو سهم بورس ایران را با هم مقایسه کنید</div>
+
+<div class="header">
+  <div>
+    <h1>📊 نسبت‌سنجی <span>حرفه‌ای</span> سهام بورس ایران</h1>
+    <div class="subtitle">تحلیل آماری و تکنیکال نسبت قیمت دو سهم</div>
+  </div>
+  <div class="header-buttons">
+    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙 حالت شب</button>
+    <button class="icon-btn" onclick="exportCSV()">📥 خروجی CSV</button>
+  </div>
+</div>
 
 <div class="card">
   <div class="controls">
     <div class="field">
       <label>نماد اول (شمارنده)</label>
-      <input list="symbolsList" id="symbol1" value="شیراز" placeholder="تایپ کنید..." autocomplete="off">
+      <input list="symbolsList" id="symbol1" placeholder="تایپ کنید..." autocomplete="off">
     </div>
-    <div style="font-size:28px;font-weight:bold;padding-bottom:6px;color:#999">÷</div>
+    <div style="font-size:24px;font-weight:bold;padding-bottom:8px;color:var(--text-light)">÷</div>
     <div class="field">
       <label>نماد دوم (مخرج)</label>
-      <input list="symbolsList" id="symbol2" value="شپدیس" placeholder="تایپ کنید..." autocomplete="off">
+      <input list="symbolsList" id="symbol2" placeholder="تایپ کنید..." autocomplete="off">
     </div>
-    <button class="btn" id="goBtn" onclick="loadRatio()">مقایسه کن</button>
+    <div class="field">
+      <label>تایم‌فریم</label>
+      <select id="timeframe">
+        <option value="daily">روزانه</option>
+        <option value="weekly">هفتگی</option>
+        <option value="monthly">ماهانه</option>
+      </select>
+    </div>
+    <button class="btn" id="goBtn" onclick="loadRatio()">تحلیل کن</button>
   </div>
   <datalist id="symbolsList"></datalist>
   <div class="status" id="statusMsg">⏳ در حال دریافت لیست نمادها...</div>
@@ -62,26 +126,54 @@ h1{text-align:center;color:#1a237e;margin:0 0 5px}
 
 <div id="log"></div>
 
-<div id="info" class="info">
-  <div class="info-item"><span class="label">تعداد نقاط</span><span class="value" id="infoPoints">-</span></div>
-  <div class="info-item"><span class="label">نسبت فعلی</span><span class="value" id="infoCurrent">-</span></div>
-  <div class="info-item"><span class="label">تغییر کل</span><span class="value" id="infoChange">-</span></div>
-  <div class="info-item"><span class="label">بازه زمانی</span><span class="value" id="infoRange">-</span></div>
+<div id="signalBox" class="signal-box signal-neutral" style="display:none"></div>
+
+<div id="statsPanel" class="stats-grid" style="display:none">
+  <div class="stat-box primary"><span class="label">نسبت فعلی</span><span class="value" id="sCurrent">-</span></div>
+  <div class="stat-box"><span class="label">تغییر کل</span><span class="value" id="sChange">-</span></div>
+  <div class="stat-box"><span class="label">میانگین</span><span class="value" id="sMean">-</span></div>
+  <div class="stat-box"><span class="label">انحراف معیار</span><span class="value" id="sStd">-</span></div>
+  <div class="stat-box orange"><span class="label">Z-Score</span><span class="value" id="sZ">-</span></div>
+  <div class="stat-box"><span class="label">صدک تاریخی</span><span class="value" id="sPct">-</span></div>
 </div>
 
 <div class="card">
-  <div id="chart" style="position:relative">
-    <div class="loading" id="loadingMsg">برای شروع، دکمه «مقایسه کن» را بزنید</div>
+  <div class="toggles">
+    <label class="toggle"><input type="checkbox" id="tMA20" checked onchange="redraw()"> <span style="color:var(--ma20)">MA20</span></label>
+    <label class="toggle"><input type="checkbox" id="tMA50" checked onchange="redraw()"> <span style="color:var(--ma50)">MA50</span></label>
+    <label class="toggle"><input type="checkbox" id="tMA200" onchange="redraw()"> <span style="color:var(--ma200)">MA200</span></label>
+    <label class="toggle"><input type="checkbox" id="tBB" checked onchange="redraw()"> <span style="color:var(--bb)">باندهای بولینگر</span></label>
+    <label class="toggle"><input type="checkbox" id="tMinMax" onchange="redraw()"> خطوط حداکثر/حداقل تاریخی</label>
   </div>
+
+  <div class="chart-tabs">
+    <button class="tab active" onclick="setChart('line',this)">نسبت خطی</button>
+    <button class="tab" onclick="setChart('ratio-log',this)">نسبت لگاریتمی</button>
+  </div>
+
+  <div class="chart-wrapper">
+    <div id="chart">
+      <div class="loading" id="loadingMsg">
+        <div class="spinner" style="display:none"></div>
+        <div>برای شروع، دو نماد را انتخاب کنید</div>
+      </div>
+    </div>
+    <div id="rsiChart"></div>
+  </div>
+
   <div class="legend">
-    <div class="legend-item"><div class="legend-color" style="background:#2962FF"></div><span>نسبت</span></div>
-    <div class="legend-item"><div class="legend-color" style="background:#FF6D00"></div><span>میانگین متحرک ۵۰ روزه</span></div>
+    <div class="legend-item"><div class="legend-color" style="background:var(--primary)"></div><span>نسبت</span></div>
+    <div class="legend-item"><div class="legend-color" style="background:var(--ma20)"></div><span>MA20</span></div>
+    <div class="legend-item"><div class="legend-color" style="background:var(--ma50)"></div><span>MA50</span></div>
+    <div class="legend-item"><div class="legend-color" style="background:var(--ma200)"></div><span>MA200</span></div>
+    <div class="legend-item"><div class="legend-color" style="background:var(--bb)"></div><span>بولینگر</span></div>
   </div>
 </div>
 
 </div>
 
 <script>
+// ===== ابزار لاگ =====
 const log = m => {
   const el = document.getElementById('log');
   el.classList.add('active');
@@ -89,7 +181,7 @@ const log = m => {
   el.scrollTop = el.scrollHeight;
 };
 
-// ===== تبدیل دقیق تاریخ شمسی به میلادی =====
+// ===== تبدیل تاریخ شمسی =====
 function jalaliToGregorian(jy, jm, jd) {
   jy += 1595;
   let days = -355668 + (365*jy) + (Math.floor(jy/33)*8) + Math.floor(((jy%33)+3)/4) + jd + ((jm<7)?(jm-1)*31:((jm-7)*30)+186);
@@ -106,13 +198,10 @@ function jalaliToGregorian(jy, jm, jd) {
   for(gm=0; gm<13 && gd>sal_a[gm]; gm++) gd -= sal_a[gm];
   return [gy, gm, gd];
 }
-
 function jalaliToTs(s){
   s = String(s);
   if(s.length !== 8) return null;
-  const jy = parseInt(s.substring(0,4));
-  const jm = parseInt(s.substring(4,6));
-  const jd = parseInt(s.substring(6,8));
+  const jy = parseInt(s.substring(0,4)), jm = parseInt(s.substring(4,6)), jd = parseInt(s.substring(6,8));
   if(jy<1300||jy>1500||jm<1||jm>12||jd<1||jd>31) return null;
   const [gy, gm, gd] = jalaliToGregorian(jy, jm, jd);
   return Math.floor(new Date(gy, gm-1, gd).getTime()/1000);
@@ -124,7 +213,20 @@ async function fetchJSON(url){
   return await res.json();
 }
 
-// ===== دریافت لیست کامل سهام =====
+// ===== تم =====
+function toggleTheme(){
+  const isDark = document.body.getAttribute('data-theme') === 'dark';
+  document.body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('themeBtn').innerText = isDark ? '🌙 حالت شب' : '☀️ حالت روز';
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  redraw();
+}
+if(localStorage.getItem('theme') === 'dark'){
+  document.body.setAttribute('data-theme', 'dark');
+  document.getElementById('themeBtn').innerText = '☀️ حالت روز';
+}
+
+// ===== لیست نمادها =====
 let allSymbols = [];
 async function loadAllSymbols(){
   try {
@@ -136,34 +238,28 @@ async function loadAllSymbols(){
       symbol: (x.lVal18AFC || '').trim(),
       name: (x.lVal30 || '').trim()
     })).filter(x => x.symbol && x.code);
-
-    const datalist = document.getElementById('symbolsList');
-    datalist.innerHTML = allSymbols.map(x =>
-      '<option value="' + x.symbol + '">' + x.name + '</option>'
-    ).join('');
-
+    const dl = document.getElementById('symbolsList');
+    dl.innerHTML = allSymbols.map(x => '<option value="' + x.symbol + '">' + x.name + '</option>').join('');
     const st = document.getElementById('statusMsg');
-    st.innerText = '✅ ' + allSymbols.length.toLocaleString('fa-IR') + ' نماد بارگذاری شد. تایپ کنید تا جستجو شود.';
+    st.innerText = '✅ ' + allSymbols.length.toLocaleString('fa-IR') + ' نماد بارگذاری شد';
     st.className = 'status ok';
-    log('✅ ' + allSymbols.length + ' نماد دریافت شد');
+    log('✅ ' + allSymbols.length + ' نماد');
   } catch(e){
     const st = document.getElementById('statusMsg');
-    st.innerText = '⚠️ لیست نمادها دریافت نشد - می‌توانید دستی تایپ کنید';
+    st.innerText = '⚠️ لیست دریافت نشد';
     st.className = 'status err';
-    log('⚠️ MarketWatch: ' + e.message);
+    log('⚠️ ' + e.message);
   }
 }
 
 function findSymbolCode(sym){
-  const s = sym.trim();
-  const found = allSymbols.find(x => x.symbol === s);
-  return found ? found.code : null;
+  const f = allSymbols.find(x => x.symbol === sym.trim());
+  return f ? f.code : null;
 }
 
 async function getInsCode(sym){
   const local = findSymbolCode(sym);
   if(local) return local;
-  log('🔍 جستجوی API: ' + sym);
   const d = await fetchJSON('https://cdn.tsetmc.com/api/Instrument/GetInstrumentSearch/' + encodeURIComponent(sym));
   return d.instrumentSearch?.[0]?.insCode || null;
 }
@@ -171,123 +267,321 @@ async function getInsCode(sym){
 async function getHistory(code){
   try {
     const d = await fetchJSON('https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDailyList/' + code + '/1');
-    const list = d.closingPrice || d.closingPriceDaily || [];
-    if(list.length) return list;
+    const l = d.closingPrice || d.closingPriceDaily || [];
+    if(l.length) return l;
   } catch(e){}
   const d = await fetchJSON('https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDailyList/' + code + '/0');
   return d.closingPrice || d.closingPriceDaily || [];
 }
 
-let chart, ratioSeries, maSeries;
-
-function initChart(){
-  const container = document.getElementById('chart');
-  container.innerHTML = '';
-  if(chart){ chart.remove(); chart = null; }
-  chart = LightweightCharts.createChart(container, {
-    width: container.clientWidth,
-    height: 600,
-    layout: { background: { color: '#fafbfc' }, textColor: '#333' },
-    grid: { vertLines: { color: '#eef1f6' }, horzLines: { color: '#eef1f6' } },
-    timeScale: { timeVisible: false, secondsVisible: false, borderColor: '#d0d7de' },
-    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-    rightPriceScale: { borderColor: '#d0d7de' },
-    localization: {
-      locale: 'fa-IR',
-      dateFormat: 'yyyy/MM/dd'
-    }
-  });
-  ratioSeries = chart.addLineSeries({ color: '#2962FF', lineWidth: 2, title: 'نسبت' });
-  maSeries = chart.addLineSeries({ color: '#FF6D00', lineWidth: 1, title: 'MA50' });
-}
-
+// ===== محاسبات آماری =====
 function calcMA(data, period){
   const out = [];
   for(let i=period-1; i<data.length; i++){
-    let sum = 0;
-    for(let j=0; j<period; j++) sum += data[i-j].value;
-    out.push({ time: data[i].time, value: sum/period });
+    let s = 0;
+    for(let j=0; j<period; j++) s += data[i-j].value;
+    out.push({ time: data[i].time, value: s/period });
   }
   return out;
 }
 
-function setLoading(msg){
-  document.getElementById('loadingMsg').style.display = 'block';
-  document.getElementById('loadingMsg').innerText = msg;
+function calcBB(data, period=20, mult=2){
+  const upper = [], lower = [], middle = [];
+  for(let i=period-1; i<data.length; i++){
+    let sum = 0;
+    for(let j=0; j<period; j++) sum += data[i-j].value;
+    const ma = sum/period;
+    let variance = 0;
+    for(let j=0; j<period; j++) variance += Math.pow(data[i-j].value - ma, 2);
+    const std = Math.sqrt(variance/period);
+    middle.push({ time: data[i].time, value: ma });
+    upper.push({ time: data[i].time, value: ma + mult*std });
+    lower.push({ time: data[i].time, value: ma - mult*std });
+  }
+  return { upper, middle, lower };
 }
 
+function calcRSI(data, period=14){
+  if(data.length < period+1) return [];
+  const out = [];
+  let gains = 0, losses = 0;
+  for(let i=1; i<=period; i++){
+    const diff = data[i].value - data[i-1].value;
+    if(diff >= 0) gains += diff; else losses -= diff;
+  }
+  let avgGain = gains/period, avgLoss = losses/period;
+  out.push({ time: data[period].time, value: 100 - 100/(1 + avgGain/(avgLoss||0.0001)) });
+  for(let i=period+1; i<data.length; i++){
+    const diff = data[i].value - data[i-1].value;
+    const g = diff > 0 ? diff : 0;
+    const l = diff < 0 ? -diff : 0;
+    avgGain = (avgGain*(period-1) + g)/period;
+    avgLoss = (avgLoss*(period-1) + l)/period;
+    out.push({ time: data[i].time, value: 100 - 100/(1 + avgGain/(avgLoss||0.0001)) });
+  }
+  return out;
+}
+
+function calcStats(ratios){
+  const vals = ratios.map(r => r.value);
+  const n = vals.length;
+  const mean = vals.reduce((a,b) => a+b, 0) / n;
+  const variance = vals.reduce((a,b) => a + Math.pow(b-mean, 2), 0) / n;
+  const std = Math.sqrt(variance);
+  const sorted = [...vals].sort((a,b) => a-b);
+  const median = n % 2 ? sorted[Math.floor(n/2)] : (sorted[n/2-1] + sorted[n/2])/2;
+  const min = sorted[0], max = sorted[n-1];
+  const current = vals[n-1];
+  const zScore = std > 0 ? (current - mean) / std : 0;
+  const pct = (sorted.filter(v => v <= current).length / n * 100).toFixed(1);
+  return { mean, std, median, min, max, current, zScore, pct: parseFloat(pct), n };
+}
+
+// ===== نمودار =====
+let chart, rsiChart;
+let series = {};
+let currentRatios = [];
+let currentChartType = 'line';
+
+function getChartOptions(el){
+  const isDark = document.body.getAttribute('data-theme') === 'dark';
+  const bg = isDark ? '#161b22' : '#fafbfc';
+  const grid = isDark ? '#21262d' : '#eef1f6';
+  const text = isDark ? '#e6edf3' : '#333';
+  return {
+    width: el.clientWidth,
+    height: el.clientHeight,
+    layout: { background: { color: bg }, textColor: text },
+    grid: { vertLines: { color: grid }, horzLines: { color: grid } },
+    timeScale: { timeVisible: false, secondsVisible: false, borderColor: grid },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+    rightPriceScale: { borderColor: grid },
+    localization: { locale: 'fa-IR' }
+  };
+}
+
+function initCharts(){
+  const chartEl = document.getElementById('chart');
+  chartEl.innerHTML = '';
+  if(chart){ chart.remove(); chart = null; }
+  if(rsiChart){ rsiChart.remove(); rsiChart = null; }
+  chart = LightweightCharts.createChart(chartEl, getChartOptions({clientWidth: chartEl.clientWidth, clientHeight: 500}));
+  chart.applyOptions({height: 500});
+
+  series.ratio = chart.addLineSeries({ color: '#2962FF', lineWidth: 2, title: 'نسبت' });
+  series.ma20 = chart.addLineSeries({ color: '#FF6D00', lineWidth: 1, title: 'MA20' });
+  series.ma50 = chart.addLineSeries({ color: '#9C27B0', lineWidth: 1, title: 'MA50' });
+  series.ma200 = chart.addLineSeries({ color: '#E91E63', lineWidth: 1, title: 'MA200' });
+  series.bbUpper = chart.addLineSeries({ color: '#00BCD4', lineWidth: 1, lineStyle: 2, title: 'BB+' });
+  series.bbLower = chart.addLineSeries({ color: '#00BCD4', lineWidth: 1, lineStyle: 2, title: 'BB-' });
+  series.bbMiddle = chart.addLineSeries({ color: '#00BCD4', lineWidth: 1, lineStyle: 0, visible: false });
+  series.maxLine = chart.addLineSeries({ color: '#f44336', lineWidth: 1, lineStyle: 2, title: 'MAX' });
+  series.minLine = chart.addLineSeries({ color: '#4CAF50', lineWidth: 1, lineStyle: 2, title: 'MIN' });
+
+  const rsiEl = document.getElementById('rsiChart');
+  rsiChart = LightweightCharts.createChart(rsiEl, {...getChartOptions({clientWidth: rsiEl.clientWidth, clientHeight: 150}), height: 150});
+  series.rsi = rsiChart.addLineSeries({ color: '#FF9800', lineWidth: 2, title: 'RSI' });
+  // خطوط 30 و 70
+  series.rsi70 = rsiChart.addLineSeries({ color: '#f44336', lineWidth: 1, lineStyle: 2 });
+  series.rsi30 = rsiChart.addLineSeries({ color: '#4CAF50', lineWidth: 1, lineStyle: 2 });
+}
+
+function setChart(type, btn){
+  currentChartType = type;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  redraw();
+}
+
+function redraw(){
+  if(!currentRatios.length || !chart) return;
+  const ratios = currentChartType === 'ratio-log' 
+    ? currentRatios.map(r => ({time: r.time, value: Math.log(r.value)}))
+    : currentRatios;
+
+  series.ratio.setData(ratios);
+  
+  const showMA = (id, period) => {
+    const el = document.getElementById(id);
+    if(el.checked && ratios.length > period) series[id.replace('t','').toLowerCase()].setData(calcMA(ratios, period));
+    else series[id.replace('t','').toLowerCase()].setData([]);
+  };
+  showMA('tMA20', 20);
+  showMA('tMA50', 50);
+  showMA('tMA200', 200);
+
+  if(document.getElementById('tBB').checked && ratios.length > 20){
+    const bb = calcBB(ratios, 20, 2);
+    series.bbUpper.setData(bb.upper);
+    series.bbLower.setData(bb.lower);
+    series.bbMiddle.setData([]);
+  } else {
+    series.bbUpper.setData([]); series.bbLower.setData([]); series.bbMiddle.setData([]);
+  }
+
+  if(document.getElementById('tMinMax').checked){
+    const stats = calcStats(ratios);
+    const firstT = ratios[0].time;
+    const lastT = ratios[ratios.length-1].time;
+    series.maxLine.setData([{time:firstT, value:stats.max}, {time:lastT, value:stats.max}]);
+    series.minLine.setData([{time:firstT, value:stats.min}, {time:lastT, value:stats.min}]);
+  } else {
+    series.maxLine.setData([]); series.minLine.setData([]);
+  }
+
+  chart.timeScale().fitContent();
+  rsiChart.timeScale().fitContent();
+}
+
+// ===== بارگذاری و تحلیل =====
 async function loadRatio(){
   const btn = document.getElementById('goBtn');
   btn.disabled = true;
   document.getElementById('log').innerHTML = '';
   document.getElementById('log').classList.remove('active');
-  document.getElementById('info').classList.remove('show');
+  document.getElementById('statsPanel').style.display = 'none';
+  document.getElementById('signalBox').style.display = 'none';
+  document.getElementById('loadingMsg').innerHTML = '<div class="spinner"></div><div>در حال دریافت داده...</div>';
+  document.getElementById('loadingMsg').style.display = 'block';
 
   try {
     const s1 = document.getElementById('symbol1').value.trim();
     const s2 = document.getElementById('symbol2').value.trim();
     if(!s1 || !s2){ alert('هر دو نماد را وارد کنید'); btn.disabled = false; return; }
 
-    setLoading('در حال دریافت داده...');
-
     const c1 = await getInsCode(s1);
     const c2 = await getInsCode(s2);
-    if(!c1){ alert('نماد "' + s1 + '" پیدا نشد'); setLoading('نماد پیدا نشد'); btn.disabled = false; return; }
-    if(!c2){ alert('نماد "' + s2 + '" پیدا نشد'); setLoading('نماد پیدا نشد'); btn.disabled = false; return; }
-    log('✅ InsCode: ' + c1 + ' | ' + c2);
+    if(!c1){ alert('نماد "' + s1 + '" پیدا نشد'); btn.disabled = false; return; }
+    if(!c2){ alert('نماد "' + s2 + '" پیدا نشد'); btn.disabled = false; return; }
 
     const h1 = await getHistory(c1);
     const h2 = await getHistory(c2);
-    if(!h1.length || !h2.length){ alert('داده تاریخی خالی است'); btn.disabled = false; return; }
-    log('📊 رکورد: ' + h1.length + ' | ' + h2.length);
+    if(!h1.length || !h2.length){ alert('داده خالی'); btn.disabled = false; return; }
 
     const m1 = {}, m2 = {};
     h1.forEach(x => { const p = x.pClosing || x.pDrCotVal; if(p>0) m1[String(x.dEven)] = p; });
     h2.forEach(x => { const p = x.pClosing || x.pDrCotVal; if(p>0) m2[String(x.dEven)] = p; });
 
     const dates = Object.keys(m1).filter(d => m2[d]).sort();
-    log('✅ تاریخ مشترک: ' + dates.length);
-
     const unique = {};
     for(const d of dates){
       const ts = jalaliToTs(d);
       if(ts === null) continue;
       unique[ts] = { time: ts, value: m1[d] / m2[d] };
     }
-    const ratios = Object.values(unique).sort((a,b) => a.time - b.time);
+    let ratios = Object.values(unique).sort((a,b) => a.time - b.time);
+
+    // اعمال تایم‌فریم
+    const tf = document.getElementById('timeframe').value;
+    if(tf === 'weekly') ratios = aggregate(ratios, 7);
+    else if(tf === 'monthly') ratios = aggregate(ratios, 30);
 
     if(ratios.length < 2){ alert('داده کافی نیست'); btn.disabled = false; return; }
 
-    const first = ratios[0], last = ratios[ratios.length-1];
-    const change = ((last.value - first.value) / first.value * 100).toFixed(2);
-    document.getElementById('infoPoints').innerText = ratios.length.toLocaleString('fa-IR');
-    document.getElementById('infoCurrent').innerText = last.value.toFixed(4);
-    document.getElementById('infoChange').innerText = (change >= 0 ? '+' : '') + change + '%';
-    document.getElementById('infoChange').style.color = change >= 0 ? '#4CAF50' : '#f44336';
-    const d1 = new Date(first.time*1000).toLocaleDateString('fa-IR');
-    const d2 = new Date(last.time*1000).toLocaleDateString('fa-IR');
-    document.getElementById('infoRange').innerText = d1 + ' تا ' + d2;
-    document.getElementById('info').classList.add('show');
+    currentRatios = ratios;
+    const stats = calcStats(ratios);
 
-    initChart();
-    ratioSeries.setData(ratios);
-    if(ratios.length > 50) maSeries.setData(calcMA(ratios, 50));
-    chart.timeScale().fitContent();
-    log('🎉 نمودار رسم شد');
+    // پنل آمار
+    document.getElementById('sCurrent').innerText = stats.current.toFixed(4);
+    const change = ((stats.current - ratios[0].value) / ratios[0].value * 100).toFixed(2);
+    document.getElementById('sChange').innerText = (change >= 0 ? '+' : '') + change + '%';
+    document.getElementById('sChange').style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
+    document.getElementById('sMean').innerText = stats.mean.toFixed(4);
+    document.getElementById('sStd').innerText = stats.std.toFixed(4);
+    document.getElementById('sZ').innerText = stats.zScore.toFixed(2);
+    document.getElementById('sPct').innerText = stats.pct + '%';
+    document.getElementById('statsPanel').style.display = 'grid';
+
+    // سیگنال
+    const signalBox = document.getElementById('signalBox');
+    signalBox.style.display = 'block';
+    let signal, cls;
+    if(stats.zScore > 2){ signal = '🔴 نسبت در اشباع خرید (Z=' + stats.zScore.toFixed(2) + ') — احتمال بازگشت'; cls = 'signal-sell'; }
+    else if(stats.zScore < -2){ signal = '🟢 نسبت در اشباع فروش (Z=' + stats.zScore.toFixed(2) + ') — فرصت خرید'; cls = 'signal-buy'; }
+    else if(stats.zScore > 1){ signal = '🟠 نسبت بالاتر از میانگین (Z=' + stats.zScore.toFixed(2) + ')'; cls = 'signal-neutral'; }
+    else if(stats.zScore < -1){ signal = '🟡 نسبت پایین‌تر از میانگین (Z=' + stats.zScore.toFixed(2) + ')'; cls = 'signal-neutral'; }
+    else { signal = '⚪ نسبت در محدوده نرمال (Z=' + stats.zScore.toFixed(2) + ')'; cls = 'signal-neutral'; }
+    signalBox.innerText = signal;
+    signalBox.className = 'signal-box ' + cls;
+
+    // رسم
+    document.getElementById('loadingMsg').style.display = 'none';
+    initCharts();
+    redraw();
+
+    // RSI
+    const rsiData = calcRSI(ratios, 14);
+    if(rsiData.length){
+      document.getElementById('rsiChart').style.display = 'block';
+      series.rsi.setData(rsiData);
+      series.rsi70.setData(rsiData.map(r => ({time: r.time, value: 70})));
+      series.rsi30.setData(rsiData.map(r => ({time: r.time, value: 30})));
+    }
+
+    // ذخیره
+    localStorage.setItem('lastSymbol1', s1);
+    localStorage.setItem('lastSymbol2', s2);
+
+    log('🎉 ' + ratios.length + ' نقطه | Z=' + stats.zScore.toFixed(2));
 
   } catch(e) {
     log('❌ ' + e.message);
     alert('خطا: ' + e.message);
-    setLoading('خطا در دریافت داده');
+    document.getElementById('loadingMsg').innerHTML = '❌ خطا در دریافت داده';
   }
   btn.disabled = false;
 }
 
+// تجمیع داده
+function aggregate(data, days){
+  const out = [];
+  let bucketStart = data[0].time;
+  let bucketValues = [];
+  for(const p of data){
+    if(p.time - bucketStart < days*86400){
+      bucketValues.push(p.value);
+    } else {
+      out.push({time: bucketStart, value: bucketValues[bucketValues.length-1]});
+      bucketStart = p.time;
+      bucketValues = [p.value];
+    }
+  }
+  if(bucketValues.length) out.push({time: bucketStart, value: bucketValues[bucketValues.length-1]});
+  return out;
+}
+
+// خروجی CSV
+function exportCSV(){
+  if(!currentRatios.length){ alert('ابتدا تحلیل کنید'); return; }
+  const s1 = document.getElementById('symbol1').value;
+  const s2 = document.getElementById('symbol2').value;
+  let csv = 'date,ratio\n';
+  currentRatios.forEach(r => {
+    const d = new Date(r.time * 1000).toISOString().split('T')[0];
+    csv += d + ',' + r.value + '\n';
+  });
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = s1 + '_' + s2 + '_ratio.csv';
+  a.click();
+}
+
+// ===== شروع =====
 window.addEventListener('resize', () => {
-  if(chart) chart.applyOptions({ width: document.getElementById('chart').clientWidth });
+  if(chart) chart.applyOptions({width: document.getElementById('chart').clientWidth});
+  if(rsiChart) rsiChart.applyOptions({width: document.getElementById('rsiChart').clientWidth});
 });
 
 loadAllSymbols();
+
+// بازیابی آخرین جفت
+const ls1 = localStorage.getItem('lastSymbol1');
+const ls2 = localStorage.getItem('lastSymbol2');
+if(ls1) document.getElementById('symbol1').value = ls1;
+if(ls2) document.getElementById('symbol2').value = ls2;
+if(!ls1) document.getElementById('symbol1').value = 'شیراز';
+if(!ls2) document.getElementById('symbol2').value = 'شپدیس';
 </script>
 </body>
 </html>
