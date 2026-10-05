@@ -1,3 +1,5 @@
+const MY_PROXY = 'https://tsetmc-proxy.mhdirasoli.workers.dev';
+
 export async function onRequest(context) {
   const url = new URL(context.request.url);
   const symbol1 = url.searchParams.get('symbol1') || 'شیراز';
@@ -45,19 +47,13 @@ export async function onRequest(context) {
     });
 
   } catch (error) {
-    // این بخش برای نمایش دقیق خطا به ما کمک می‌کند
     return new Response(JSON.stringify({ error: 'خطای داخلی: ' + error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
 
-// استفاده از پروکسی جدید و پایدارتر
-const PROXY_URL = 'https://api.codetabs.com/v1/proxy?quest=';
-
 async function getInsCode(symbol) {
   const targetUrl = `https://cdn.tsetmc.com/api/Instrument/GetInstrumentSearch/${encodeURIComponent(symbol)}`;
-  const res = await fetch(PROXY_URL + encodeURIComponent(targetUrl), {
-    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-  });
+  const res = await fetch(`${MY_PROXY}?url=${encodeURIComponent(targetUrl)}`);
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
   const data = await res.json();
   return data.instrumentSearch?.[0]?.insCode || null;
@@ -65,9 +61,7 @@ async function getInsCode(symbol) {
 
 async function getPriceHistory(insCode) {
   const targetUrl = `https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDailyList/${insCode}/0`;
-  const res = await fetch(PROXY_URL + encodeURIComponent(targetUrl), {
-    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-  });
+  const res = await fetch(`${MY_PROXY}?url=${encodeURIComponent(targetUrl)}`);
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
   const data = await res.json();
   return data.closingPrice || [];
