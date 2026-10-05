@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نسبت‌سنجی حرفه‌ای - بورس ایران</title>
+<title>نسبت‌سنجی پیشرفته - بورس ایران</title>
 <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -15,19 +15,19 @@
 html,body{height:100%;overflow:hidden;font-family:-apple-system,"Segoe UI",Tahoma,Arial;font-size:13px;background:var(--bg);color:var(--text)}
 button{background:transparent;border:none;color:inherit;font-family:inherit;cursor:pointer}
 input{background:transparent;border:none;color:inherit;font-family:inherit;outline:none}
+input[type=color]{width:28px;height:22px;border:1px solid var(--border);border-radius:3px;padding:0;cursor:pointer;background:transparent}
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-thumb{background:var(--panel2);border-radius:3px}
 
 .tv{display:grid;grid-template-rows:38px 1fr 32px;height:100vh}
-.tv-top{display:flex;align-items:center;gap:2px;padding:0 8px;background:var(--panel);border-bottom:1px solid var(--border);overflow:hidden}
+.tv-top{display:flex;align-items:center;gap:2px;padding:0 8px;background:var(--panel);border-bottom:1px solid var(--border);overflow:hidden;flex-wrap:nowrap}
 .tv-main{display:grid;grid-template-columns:52px 1fr;overflow:hidden}
 .tv-bottom{display:flex;align-items:center;gap:4px;padding:0 10px;background:var(--panel);border-top:1px solid var(--border);overflow-x:auto}
 .tv-bottom::-webkit-scrollbar{height:0}
 
-.symbol-input{display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--panel2);border-radius:6px;font-size:13px;font-weight:600;margin-left:2px}
+.symbol-input{display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--panel2);border-radius:6px;font-size:13px;font-weight:600}
 .symbol-input input{width:90px;font-weight:600;font-size:13px}
 .symbol-input input::placeholder{color:var(--text2);font-weight:400}
-.symbol-input .slash{color:var(--text2)}
 .symbol-input .go{background:var(--accent);color:#fff;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:600}
 .symbol-input .go:hover{background:#1e4fd8}
 
@@ -45,15 +45,17 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
 .tool-btn.accent{color:var(--accent)}
 
 .drop{position:relative}
-.drop-menu{position:absolute;top:100%;right:0;margin-top:6px;background:#1e222d;border:1px solid var(--border);border-radius:8px;padding:6px;min-width:220px;box-shadow:0 10px 30px rgba(0,0,0,0.5);z-index:1000;display:none}
+.drop-menu{position:absolute;top:100%;right:0;margin-top:6px;background:#1e222d;border:1px solid var(--border);border-radius:8px;padding:6px;min-width:230px;box-shadow:0 10px 30px rgba(0,0,0,0.5);z-index:1000;display:none;max-height:80vh;overflow-y:auto}
 .drop-menu.open{display:block}
 .drop-menu .head{font-size:10px;color:var(--text2);padding:8px 12px 4px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
-.drop-menu .item{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-radius:5px;font-size:12px;color:var(--text);cursor:pointer;transition:background 0.15s}
+.drop-menu .item{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-radius:5px;font-size:12px;color:var(--text);cursor:pointer;transition:background 0.15s;gap:8px}
 .drop-menu .item:hover{background:var(--panel2)}
 .drop-menu .item.active{background:var(--accent);color:#fff}
 .drop-menu .divider{height:1px;background:var(--border);margin:6px 4px}
 .drop-menu label.item{cursor:pointer}
-.drop-menu input[type=checkbox]{margin-left:auto;accent-color:var(--accent);width:14px;height:14px}
+.drop-menu input[type=checkbox]{accent-color:var(--accent);width:14px;height:14px}
+.drop-menu .color-row{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;font-size:12px}
+.drop-menu .color-row .colors{display:flex;gap:6px}
 
 .left-bar{background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:2px;overflow-y:auto}
 .left-bar::-webkit-scrollbar{width:0}
@@ -70,11 +72,10 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
 #rsiWrap.show{display:block}
 #rsiChart{width:100%;height:100%}
 
-/* SVG overlay for drawing */
 #drawSvg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:4;pointer-events:none}
 #drawSvg.drawing{pointer-events:auto;cursor:crosshair}
 
-.legend{position:absolute;top:10px;right:70px;background:rgba(30,34,45,0.9);border-radius:6px;padding:8px 12px;font-size:11px;z-index:10;backdrop-filter:blur(8px);display:none;min-width:220px;pointer-events:none}
+.legend{position:absolute;top:10px;right:70px;background:rgba(30,34,45,0.9);border-radius:6px;padding:8px 12px;font-size:11px;z-index:10;backdrop-filter:blur(8px);display:none;min-width:240px;pointer-events:none}
 .legend.show{display:block}
 .legend .head{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;margin-bottom:4px}
 .legend .price{color:var(--accent);font-family:monospace;font-size:14px}
@@ -84,16 +85,20 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
 .legend .row{display:flex;justify-content:space-between;padding:2px 0;color:var(--text2)}
 .legend .row span:last-child{color:var(--text);font-family:monospace}
 
-.stats{position:absolute;top:10px;left:10px;background:rgba(30,34,45,0.9);border-radius:6px;padding:10px 12px;font-size:11px;z-index:10;backdrop-filter:blur(8px);display:none;min-width:170px;pointer-events:none}
+/* پنل آمار پیشرفته */
+.stats{position:absolute;top:10px;left:10px;background:rgba(30,34,45,0.92);border-radius:8px;padding:12px 14px;font-size:11px;z-index:10;backdrop-filter:blur(10px);display:none;min-width:220px;pointer-events:auto;border:1px solid var(--border)}
 .stats.show{display:block}
-.stats .title{font-weight:700;color:var(--text);margin-bottom:6px;font-size:12px;display:flex;align-items:center;gap:6px}
-.stats .row{display:flex;justify-content:space-between;padding:3px 0;gap:15px}
+.stats .title{font-weight:700;color:var(--text);margin-bottom:8px;font-size:12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border);padding-bottom:6px}
+.stats .group{margin-bottom:8px}
+.stats .group-title{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+.stats .row{display:flex;justify-content:space-between;padding:2px 0;gap:15px}
 .stats .k{color:var(--text2)}
 .stats .v{font-weight:700;font-family:monospace;color:var(--text)}
 .stats .v.green{color:var(--green)}
 .stats .v.red{color:var(--red)}
 .stats .v.blue{color:var(--accent)}
 .stats .v.orange{color:#f7b600}
+.stats .v.purple{color:#9C27B0}
 
 .signal{position:absolute;bottom:150px;right:70px;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;z-index:10;display:none;backdrop-filter:blur(8px);pointer-events:none}
 .signal.show{display:block}
@@ -110,6 +115,7 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
 
 @media(max-width:768px){
   .symbol-input input{width:60px}
+  .stats{min-width:180px;font-size:10px}
 }
 </style>
 </head>
@@ -118,12 +124,12 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
 <div class="tv">
 
   <div class="tv-top">
-    <button class="tool-btn icon" title="جستجو">🔍</button>
-    <button class="tool-btn icon" title="منو">☰</button>
+    <button class="tool-btn icon">🔍</button>
+    <button class="tool-btn icon">☰</button>
 
     <div class="symbol-input">
       <input list="symbolsList" id="symbol1" placeholder="شیراز" autocomplete="off">
-      <span class="slash">/</span>
+      <span style="color:var(--text2)">/</span>
       <input list="symbolsList" id="symbol2" placeholder="شپدیس" autocomplete="off">
       <button class="go" id="goBtn" onclick="loadRatio()">تحلیل</button>
     </div>
@@ -132,7 +138,6 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
     <div class="sep"></div>
 
     <div class="tf-bar" id="tfBar">
-      <button class="tf-btn" data-r="7">۱ه</button>
       <button class="tf-btn" data-r="30">۱م</button>
       <button class="tf-btn" data-r="90">۳م</button>
       <button class="tf-btn" data-r="180">۶م</button>
@@ -143,25 +148,75 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
 
     <div class="sep"></div>
 
+    <!-- نوع نمودار -->
     <div class="drop">
       <button class="tool-btn" onclick="openDrop('typeDrop',event)">📊 نوع ▾</button>
       <div class="drop-menu" id="typeDrop">
-        <div class="item active" onclick="setChartType('line',this)">📈 خطی</div>
+        <div class="item active" onclick="setChartType('candle',this)">🕯 کندل استیک</div>
+        <div class="item" onclick="setChartType('line',this)">📈 خطی</div>
         <div class="item" onclick="setChartType('area',this)">🌊 ناحیه‌ای</div>
-        <div class="item" onclick="setChartType('baseline',this)">➖ خط پایه</div>
       </div>
     </div>
 
+    <!-- مقیاس -->
     <div class="drop">
-      <button class="tool-btn" onclick="openDrop('indDrop',event)">ƒx اندیکاتورها ▾</button>
+      <button class="tool-btn" onclick="openDrop('scaleDrop',event)">📐 مقیاس ▾</button>
+      <div class="drop-menu" id="scaleDrop">
+        <div class="item active" onclick="setScale('linear',this)">خطی (Linear)</div>
+        <div class="item" onclick="setScale('log',this)">لگاریتمی (Log)</div>
+        <div class="item" onclick="setScale('percent',this)">درصدی (Percent)</div>
+      </div>
+    </div>
+
+    <!-- تنظیمات کندل -->
+    <div class="drop">
+      <button class="tool-btn" onclick="openDrop('colorDrop',event)">🎨 رنگ ▾</button>
+      <div class="drop-menu" id="colorDrop">
+        <div class="head">رنگ کندل صعودی</div>
+        <div class="color-row">
+          <span>بدنه</span>
+          <div class="colors">
+            <input type="color" id="upBody" value="#26a69a" oninput="applyCandleColors()">
+          </div>
+        </div>
+        <div class="color-row">
+          <span>سایه</span>
+          <div class="colors">
+            <input type="color" id="upWick" value="#26a69a" oninput="applyCandleColors()">
+          </div>
+        </div>
+        <div class="head">رنگ کندل نزولی</div>
+        <div class="color-row">
+          <span>بدنه</span>
+          <div class="colors">
+            <input type="color" id="downBody" value="#ef5350" oninput="applyCandleColors()">
+          </div>
+        </div>
+        <div class="color-row">
+          <span>سایه</span>
+          <div class="colors">
+            <input type="color" id="downWick" value="#ef5350" oninput="applyCandleColors()">
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="item" onclick="resetColors()">↺ بازگشت به پیش‌فرض</div>
+      </div>
+    </div>
+
+    <!-- اندیکاتورها -->
+    <div class="drop">
+      <button class="tool-btn" onclick="openDrop('indDrop',event)">ƒx اندیکاتور ▾</button>
       <div class="drop-menu" id="indDrop">
         <div class="head">میانگین متحرک</div>
         <label class="item"><span style="color:#FF6D00">MA 20</span><input type="checkbox" id="tMA20" checked onchange="redraw()"></label>
-        <label class="item"><span style="color:#9C27B0">MA 50</span><input type="checkbox" id="tMA50" checked onchange="redraw()"></label>
+        <label class="item"><span style="color:#9C27B0">MA 50</span><input type="checkbox" id="tMA50" onchange="redraw()"></label>
         <label class="item"><span style="color:#E91E63">MA 200</span><input type="checkbox" id="tMA200" onchange="redraw()"></label>
         <div class="divider"></div>
-        <label class="item"><span style="color:#00BCD4">باندهای بولینگر</span><input type="checkbox" id="tBB" checked onchange="redraw()"></label>
-        <label class="item">خطوط حداکثر/حداقل<input type="checkbox" id="tMinMax" onchange="redraw()"></label>
+        <div class="head">مخصوص نسبت</div>
+        <label class="item">باندهای Z-Score<input type="checkbox" id="tZ" checked onchange="redraw()"></label>
+        <label class="item">کانال رگرسیون<input type="checkbox" id="tReg" onchange="redraw()"></label>
+        <label class="item">Rolling Z-Score<input type="checkbox" id="tRollZ" onchange="redraw()"></label>
+        <div class="divider"></div>
         <label class="item">RSI<input type="checkbox" id="tRSI" checked onchange="toggleRSI()"></label>
       </div>
     </div>
@@ -169,26 +224,24 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
     <button class="tool-btn" onclick="exportCSV()" title="خروجی">📥</button>
     <button class="tool-btn" onclick="toggleTheme()" id="themeBtn">☀️</button>
     <button class="tool-btn" onclick="toggleStats()" id="statsBtn">📊</button>
-
     <div class="sep"></div>
-    <button class="tool-btn accent" onclick="loadRatio()" title="به‌روزرسانی">⟳</button>
+    <button class="tool-btn accent" onclick="loadRatio()">⟳</button>
   </div>
 
   <div class="tv-main">
-
     <div class="left-bar">
-      <button class="lb-btn active" data-tool="cursor" title="کراس‌هیر (بدون ترسیم)">✛<span class="tip">کراس‌هیر</span></button>
-      <button class="lb-btn" data-tool="trend" title="خط روند">╱<span class="tip">خط روند</span></button>
-      <button class="lb-btn" data-tool="hline" title="خط افقی">─<span class="tip">خط افقی</span></button>
+      <button class="lb-btn active" data-tool="cursor">✛<span class="tip">کراس‌هیر</span></button>
+      <button class="lb-btn" data-tool="trend">╱<span class="tip">خط روند</span></button>
+      <button class="lb-btn" data-tool="hline">─<span class="tip">خط افقی</span></button>
       <div class="lb-sep"></div>
-      <button class="lb-btn" data-tool="fib" title="فیبوناچی">f<span class="tip">فیبوناچی</span></button>
-      <button class="lb-btn" data-tool="rect" title="مستطیل">▭<span class="tip">مستطیل</span></button>
-      <button class="lb-btn" data-tool="text" title="متن">T<span class="tip">متن</span></button>
+      <button class="lb-btn" data-tool="fib">f<span class="tip">فیبوناچی</span></button>
+      <button class="lb-btn" data-tool="rect">▭<span class="tip">مستطیل</span></button>
+      <button class="lb-btn" data-tool="text">T<span class="tip">متن</span></button>
       <div class="lb-sep"></div>
-      <button class="lb-btn" onclick="undoLast()" title="حذف آخرین">↶<span class="tip">حذف آخرین</span></button>
-      <button class="lb-btn" onclick="clearAll()" title="پاک کردن همه">🗑<span class="tip">پاک کردن همه</span></button>
+      <button class="lb-btn" onclick="undoLast()">↶<span class="tip">حذف آخرین</span></button>
+      <button class="lb-btn" onclick="clearAll()">🗑<span class="tip">پاک کردن</span></button>
       <div class="lb-sep"></div>
-      <button class="lb-btn" onclick="resetZoom()" title="بازنشانی">⟲<span class="tip">بازنشانی زوم</span></button>
+      <button class="lb-btn" onclick="resetZoom()">⟲<span class="tip">بازنشانی</span></button>
     </div>
 
     <div class="chart-area" id="chartArea">
@@ -206,13 +259,30 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
       </div>
 
       <div class="stats" id="statsPanel">
-        <div class="title">📊 آمار نسبت</div>
-        <div class="row"><span class="k">نسبت فعلی</span><span class="v blue" id="sCur">-</span></div>
-        <div class="row"><span class="k">تغییر کل</span><span class="v" id="sChg">-</span></div>
-        <div class="row"><span class="k">میانگین</span><span class="v" id="sMean">-</span></div>
-        <div class="row"><span class="k">انحراف معیار</span><span class="v" id="sStd">-</span></div>
-        <div class="row"><span class="k">Z-Score</span><span class="v orange" id="sZ">-</span></div>
-        <div class="row"><span class="k">صدک تاریخی</span><span class="v" id="sPct">-</span></div>
+        <div class="title">📊 تحلیل نسبت</div>
+
+        <div class="group">
+          <div class="group-title">آمار پایه</div>
+          <div class="row"><span class="k">نسبت فعلی</span><span class="v blue" id="sCur">-</span></div>
+          <div class="row"><span class="k">تغییر کل</span><span class="v" id="sChg">-</span></div>
+          <div class="row"><span class="k">میانگین</span><span class="v" id="sMean">-</span></div>
+          <div class="row"><span class="k">انحراف معیار</span><span class="v" id="sStd">-</span></div>
+          <div class="row"><span class="k">Z-Score</span><span class="v orange" id="sZ">-</span></div>
+          <div class="row"><span class="k">صدک تاریخی</span><span class="v" id="sPct">-</span></div>
+        </div>
+
+        <div class="group">
+          <div class="group-title">بازگشت به میانگین</div>
+          <div class="row"><span class="k">نیمه‌عمر (روز)</span><span class="v purple" id="sHalfLife">-</span></div>
+          <div class="row"><span class="k">Hurst</span><span class="v" id="sHurst">-</span></div>
+          <div class="row"><span class="k">β رگرسیون</span><span class="v" id="sBeta">-</span></div>
+        </div>
+
+        <div class="group">
+          <div class="group-title">همبستگی دو سهم</div>
+          <div class="row"><span class="k">Correlation</span><span class="v" id="sCorr">-</span></div>
+          <div class="row"><span class="k">Beta سهم ۲ به ۱</span><span class="v" id="sStockBeta">-</span></div>
+        </div>
       </div>
 
       <div class="signal" id="signalBox"></div>
@@ -223,13 +293,11 @@ input{background:transparent;border:none;color:inherit;font-family:inherit;outli
         <div>دو نماد را وارد کنید و «تحلیل» را بزنید</div>
       </div>
     </div>
-
   </div>
 
   <div class="tv-bottom">
     <button class="tf-btn" onclick="resetZoom()">⟲</button>
     <div class="sep"></div>
-    <button class="tf-btn" data-r="7">۱ه</button>
     <button class="tf-btn" data-r="30">۱م</button>
     <button class="tf-btn" data-r="90">۳م</button>
     <button class="tf-btn" data-r="180">۶م</button>
@@ -272,23 +340,15 @@ document.querySelectorAll('.drop-menu').forEach(m => m.addEventListener('click',
 let isDark = true;
 function toggleTheme(){
   isDark = !isDark;
-  if(isDark){
-    document.documentElement.style.setProperty('--bg', '#131722');
-    document.documentElement.style.setProperty('--panel', '#1e222d');
-    document.documentElement.style.setProperty('--panel2', '#2a2e39');
-    document.documentElement.style.setProperty('--border', '#2a2e39');
-    document.documentElement.style.setProperty('--text', '#d1d4dc');
-    document.documentElement.style.setProperty('--text2', '#787b86');
-    $('themeBtn').innerText = '☀️';
-  } else {
-    document.documentElement.style.setProperty('--bg', '#ffffff');
-    document.documentElement.style.setProperty('--panel', '#f7f8fa');
-    document.documentElement.style.setProperty('--panel2', '#eef1f6');
-    document.documentElement.style.setProperty('--border', '#e0e3eb');
-    document.documentElement.style.setProperty('--text', '#131722');
-    document.documentElement.style.setProperty('--text2', '#787b86');
-    $('themeBtn').innerText = '🌙';
-  }
+  const vars = isDark ? {
+    '--bg':'#131722','--panel':'#1e222d','--panel2':'#2a2e39','--border':'#2a2e39',
+    '--text':'#d1d4dc','--text2':'#787b86'
+  } : {
+    '--bg':'#ffffff','--panel':'#f7f8fa','--panel2':'#eef1f6','--border':'#e0e3eb',
+    '--text':'#131722','--text2':'#787b86'
+  };
+  Object.entries(vars).forEach(([k,v]) => document.documentElement.style.setProperty(k, v));
+  $('themeBtn').innerText = isDark ? '☀️' : '🌙';
   if(currentRatios.length) redraw();
 }
 
@@ -306,33 +366,73 @@ function findCode(s){ const f = allSymbols.find(x => x.symbol === s.trim()); ret
 async function getInsCode(s){ const l = findCode(s); if(l) return l; const d = await fj('https://cdn.tsetmc.com/api/Instrument/GetInstrumentSearch/' + encodeURIComponent(s)); return d.instrumentSearch?.[0]?.insCode || null; }
 async function getHistory(c){ const d = await fj('https://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDailyList/' + c + '/0'); return d.closingPriceDaily || d.closingPrice || []; }
 
-function calcMA(d, p){ const o = []; for(let i=p-1; i<d.length; i++){ let s = 0; for(let j=0; j<p; j++) s += d[i-j].value; o.push({time:d[i].time, value:s/p}); } return o; }
-function calcBB(d, p=20, m=2){
-  const u = [], l = [];
+/* ============ اندیکاتورها ============ */
+function calcMA(d, p){ const o = []; for(let i=p-1; i<d.length; i++){ let s = 0; for(let j=0; j<p; j++) s += d[i-j].close; o.push({time:d[i].time, value:s/p}); } return o; }
+
+function calcRollingZ(d, p=20){
+  const o = [];
   for(let i=p-1; i<d.length; i++){
-    let sum = 0; for(let j=0; j<p; j++) sum += d[i-j].value;
-    const ma = sum/p; let v = 0; for(let j=0; j<p; j++) v += Math.pow(d[i-j].value-ma, 2);
+    let s = 0;
+    for(let j=0; j<p; j++) s += d[i-j].close;
+    const mean = s/p;
+    let v = 0;
+    for(let j=0; j<p; j++) v += Math.pow(d[i-j].close - mean, 2);
     const sd = Math.sqrt(v/p);
-    u.push({time:d[i].time, value:ma+m*sd}); l.push({time:d[i].time, value:ma-m*sd});
+    o.push({time:d[i].time, value: sd > 0 ? (d[i].close - mean)/sd : 0});
   }
-  return {upper:u, lower:l};
+  return o;
 }
+
+function calcRegressionChannel(d){
+  const n = d.length;
+  let sx = 0, sy = 0, sxy = 0, sxx = 0;
+  for(let i=0; i<n; i++){ sx += i; sy += d[i].close; sxy += i*d[i].close; sxx += i*i; }
+  const slope = (n*sxy - sx*sy) / (n*sxx - sx*sx);
+  const intercept = (sy - slope*sx) / n;
+  let maxDev = 0;
+  for(let i=0; i<n; i++){
+    const pred = intercept + slope*i;
+    const dev = Math.abs(d[i].close - pred);
+    if(dev > maxDev) maxDev = dev;
+  }
+  const mid = [], up = [], dn = [];
+  for(let i=0; i<n; i++){
+    const pred = intercept + slope*i;
+    mid.push({time: d[i].time, value: pred});
+    up.push({time: d[i].time, value: pred + maxDev});
+    dn.push({time: d[i].time, value: pred - maxDev});
+  }
+  return {mid, up, dn, slope};
+}
+
+function calcZScoreBands(d, mult=2){
+  const v = d.map(x => x.close);
+  const n = v.length;
+  const mean = v.reduce((a,b) => a+b, 0)/n;
+  const sd = Math.sqrt(v.reduce((a,b) => a + Math.pow(b-mean, 2), 0)/n);
+  const upper = d.map(x => ({time: x.time, value: mean + mult*sd}));
+  const lower = d.map(x => ({time: x.time, value: mean - mult*sd}));
+  return {upper, lower, mean, sd};
+}
+
 function calcRSI(d, p=14){
   if(d.length < p+1) return [];
   const o = []; let g = 0, ls = 0;
-  for(let i=1; i<=p; i++){ const df = d[i].value-d[i-1].value; if(df>=0) g += df; else ls -= df; }
+  for(let i=1; i<=p; i++){ const df = d[i].close-d[i-1].close; if(df>=0) g += df; else ls -= df; }
   let ag = g/p, al = ls/p;
   o.push({time:d[p].time, value:100-100/(1+ag/(al||0.0001))});
   for(let i=p+1; i<d.length; i++){
-    const df = d[i].value-d[i-1].value;
+    const df = d[i].close-d[i-1].close;
     const gg = df>0?df:0, ll = df<0?-df:0;
     ag = (ag*(p-1)+gg)/p; al = (al*(p-1)+ll)/p;
     o.push({time:d[i].time, value:100-100/(1+ag/(al||0.0001))});
   }
   return o;
 }
+
+/* ============ تحلیل آماری پیشرفته ============ */
 function calcStats(d){
-  const v = d.map(r => r.value), n = v.length;
+  const v = d.map(r => r.close), n = v.length;
   const mean = v.reduce((a,b)=>a+b,0)/n;
   const sd = Math.sqrt(v.reduce((a,b)=>a+Math.pow(b-mean,2),0)/n);
   const s = [...v].sort((a,b)=>a-b);
@@ -342,22 +442,112 @@ function calcStats(d){
   return {mean, std:sd, min:s[0], max:s[n-1], current:cur, zScore:z, pct:+pct, n};
 }
 
+function calcHalfLife(d){
+  // AR(1): Δr_t = α + β*r_{t-1}
+  const n = d.length;
+  if(n < 10) return null;
+  const dr = [], rlag = [];
+  for(let i=1; i<n; i++){
+    dr.push(d[i].close - d[i-1].close);
+    rlag.push(d[i-1].close);
+  }
+  const m = dr.length;
+  const mx = rlag.reduce((a,b)=>a+b,0)/m;
+  const my = dr.reduce((a,b)=>a+b,0)/m;
+  let sxy = 0, sxx = 0;
+  for(let i=0; i<m; i++){ sxy += (rlag[i]-mx)*(dr[i]-my); sxx += Math.pow(rlag[i]-mx, 2); }
+  const beta = sxx > 0 ? sxy/sxx : 0;
+  if(beta >= 0) return {beta, halfLife: Infinity};
+  return {beta, halfLife: -Math.log(2) / Math.log(1 + beta)};
+}
+
+function calcHurst(d){
+  // R/S analysis
+  const v = d.map(x => x.close);
+  const n = v.length;
+  if(n < 20) return null;
+  const sizes = [];
+  for(let s = 8; s <= Math.floor(n/2); s *= 2) sizes.push(s);
+  if(sizes.length < 2) return null;
+  const logRS = [], logN = [];
+  sizes.forEach(size => {
+    const chunks = Math.floor(n / size);
+    let rsSum = 0, cnt = 0;
+    for(let c=0; c<chunks; c++){
+      const chunk = v.slice(c*size, (c+1)*size);
+      const mean = chunk.reduce((a,b)=>a+b,0)/size;
+      let cum = 0, minC = 0, maxC = 0;
+      for(let i=0; i<size; i++){
+        cum += chunk[i] - mean;
+        if(cum < minC) minC = cum;
+        if(cum > maxC) maxC = cum;
+      }
+      const R = maxC - minC;
+      const S = Math.sqrt(chunk.reduce((a,b)=>a+Math.pow(b-mean,2),0)/size);
+      if(S > 0) { rsSum += R/S; cnt++; }
+    }
+    if(cnt > 0){
+      logRS.push(Math.log(rsSum/cnt));
+      logN.push(Math.log(size));
+    }
+  });
+  if(logN.length < 2) return null;
+  const m = logN.length;
+  const mx = logN.reduce((a,b)=>a+b,0)/m;
+  const my = logRS.reduce((a,b)=>a+b,0)/m;
+  let sxy = 0, sxx = 0;
+  for(let i=0; i<m; i++){ sxy += (logN[i]-mx)*(logRS[i]-my); sxx += Math.pow(logN[i]-mx, 2); }
+  return sxx > 0 ? sxy/sxx : null;
+}
+
+function calcCorrBeta(h1, h2){
+  // بازده روزانه
+  const map1 = {}, map2 = {};
+  h1.forEach(x => { const p = x.pClosing || x.pDrCotVal; if(p>0) map1[String(x.dEven)] = p; });
+  h2.forEach(x => { const p = x.pClosing || x.pDrCotVal; if(p>0) map2[String(x.dEven)] = p; });
+  const dates = Object.keys(map1).filter(d => map2[d]).sort();
+  const r1 = [], r2 = [];
+  for(let i=1; i<dates.length; i++){
+    r1.push((map1[dates[i]] - map1[dates[i-1]]) / map1[dates[i-1]]);
+    r2.push((map2[dates[i]] - map2[dates[i-1]]) / map2[dates[i-1]]);
+  }
+  const n = r1.length;
+  if(n < 2) return {corr: null, beta: null};
+  const m1 = r1.reduce((a,b)=>a+b,0)/n;
+  const m2 = r2.reduce((a,b)=>a+b,0)/n;
+  let cov = 0, v1 = 0, v2 = 0;
+  for(let i=0; i<n; i++){
+    cov += (r1[i]-m1)*(r2[i]-m2);
+    v1 += Math.pow(r1[i]-m1, 2);
+    v2 += Math.pow(r2[i]-m2, 2);
+  }
+  const corr = (v1>0 && v2>0) ? cov/Math.sqrt(v1*v2) : null;
+  const beta = v1 > 0 ? cov/v1 : null;
+  return {corr, beta};
+}
+
+/* ============ نمودار ============ */
 let chart, rsiChart, series = {};
-let allRatios = [], currentRatios = [];
-let currentRange = 365, chartType = 'line';
+let allData = [], currentRatios = [];
+let currentRange = 365, chartType = 'candle';
+let scaleType = 'linear';
+let candleColors = {upBody:'#26a69a', upWick:'#26a69a', downBody:'#ef5350', downWick:'#ef5350'};
 
 function chartOpts(el, h){
   const bg = isDark ? '#131722' : '#ffffff';
   const grid = isDark ? '#1e222d' : '#f0f3fa';
   const text = isDark ? '#d1d4dc' : '#131722';
   const bd = isDark ? '#2a2e39' : '#e0e3eb';
+  const mode = scaleType === 'log' ? LightweightCharts.PriceScaleMode.Logarithmic :
+               scaleType === 'percent' ? LightweightCharts.PriceScaleMode.Percentage :
+               LightweightCharts.PriceScaleMode.Normal;
   return {
     width: el.clientWidth, height: h,
     layout: {background:{color:bg}, textColor:text, fontSize:11},
     grid: {vertLines:{color:grid}, horzLines:{color:grid}},
     timeScale: {timeVisible:false, secondsVisible:false, borderColor:bd, rightOffset:5, barSpacing:6},
     crosshair: {mode: LightweightCharts.CrosshairMode.Normal},
-    rightPriceScale: {borderColor:bd, scaleMargins:{top:0.1, bottom:0.1}}
+    rightPriceScale: {borderColor:bd, scaleMargins:{top:0.1, bottom:0.1}, mode: mode}
   };
 }
 
@@ -368,10 +558,17 @@ function initCharts(){
   if(rsiChart){ rsiChart.remove(); rsiChart = null; }
   chart = LightweightCharts.createChart(el, chartOpts(el, el.clientHeight));
 
-  if(chartType === 'area'){
+  if(chartType === 'candle'){
+    series.ratio = chart.addCandlestickSeries({
+      upColor: candleColors.upBody,
+      downColor: candleColors.downBody,
+      borderUpColor: candleColors.upBody,
+      borderDownColor: candleColors.downBody,
+      wickUpColor: candleColors.upWick,
+      wickDownColor: candleColors.downWick
+    });
+  } else if(chartType === 'area'){
     series.ratio = chart.addAreaSeries({lineColor:'#2962FF', topColor:'rgba(41,98,255,0.4)', bottomColor:'rgba(41,98,255,0.02)', lineWidth:2});
-  } else if(chartType === 'baseline'){
-    series.ratio = chart.addBaselineSeries({baseValue:{type:'price', price:0}, topLineColor:'#26a69a', topFillColor1:'rgba(38,166,154,0.3)', topFillColor2:'rgba(38,166,154,0.05)', bottomLineColor:'#ef5350', bottomFillColor1:'rgba(239,83,80,0.05)', bottomFillColor2:'rgba(239,83,80,0.3)', lineWidth:2});
   } else {
     series.ratio = chart.addLineSeries({color:'#2962FF', lineWidth:2});
   }
@@ -379,10 +576,11 @@ function initCharts(){
   series.ma20 = chart.addLineSeries({color:'#FF6D00', lineWidth:1});
   series.ma50 = chart.addLineSeries({color:'#9C27B0', lineWidth:1});
   series.ma200 = chart.addLineSeries({color:'#E91E63', lineWidth:1});
-  series.bbU = chart.addLineSeries({color:'#00BCD4', lineWidth:1, lineStyle:2});
-  series.bbL = chart.addLineSeries({color:'#00BCD4', lineWidth:1, lineStyle:2});
-  series.maxL = chart.addLineSeries({color:'#ef5350', lineWidth:1, lineStyle:2});
-  series.minL = chart.addLineSeries({color:'#26a69a', lineWidth:1, lineStyle:2});
+  series.zUp = chart.addLineSeries({color:'#f7b600', lineWidth:1, lineStyle:2});
+  series.zDn = chart.addLineSeries({color:'#f7b600', lineWidth:1, lineStyle:2});
+  series.regMid = chart.addLineSeries({color:'#2962FF', lineWidth:1, lineStyle:1});
+  series.regUp = chart.addLineSeries({color:'rgba(41,98,255,0.5)', lineWidth:1, lineStyle:3});
+  series.regDn = chart.addLineSeries({color:'rgba(41,98,255,0.5)', lineWidth:1, lineStyle:3});
 
   const rEl = $('rsiChart');
   rsiChart = LightweightCharts.createChart(rEl, chartOpts(rEl, 140));
@@ -408,7 +606,7 @@ function initCharts(){
     if(!p.time || !currentRatios.length){ info.style.display = 'none'; return; }
     const f = currentRatios.find(r => r.time === p.time);
     if(!f){ info.style.display = 'none'; return; }
-    info.innerText = new Date(p.time*1000).toLocaleDateString('fa-IR') + '  |  ' + f.value.toFixed(4);
+    info.innerText = new Date(p.time*1000).toLocaleDateString('fa-IR') + '  |  O:' + f.open.toFixed(3) + ' H:' + f.high.toFixed(3) + ' L:' + f.low.toFixed(3) + ' C:' + f.close.toFixed(3);
     info.style.display = 'block';
   });
 
@@ -421,6 +619,44 @@ function setChartType(t, el){
   el.classList.add('active');
   closeDrops();
   if(currentRatios.length){ initCharts(); redraw(); }
+}
+
+function setScale(s, el){
+  scaleType = s;
+  document.querySelectorAll('#scaleDrop .item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  closeDrops();
+  if(chart){
+    const mode = s === 'log' ? LightweightCharts.PriceScaleMode.Logarithmic :
+                 s === 'percent' ? LightweightCharts.PriceScaleMode.Percentage :
+                 LightweightCharts.PriceScaleMode.Normal;
+    chart.applyOptions({rightPriceScale: {mode}});
+  }
+}
+
+function applyCandleColors(){
+  candleColors.upBody = $('upBody').value;
+  candleColors.upWick = $('upWick').value;
+  candleColors.downBody = $('downBody').value;
+  candleColors.downWick = $('downWick').value;
+  if(series.ratio && chartType === 'candle'){
+    series.ratio.applyOptions({
+      upColor: candleColors.upBody,
+      downColor: candleColors.downBody,
+      borderUpColor: candleColors.upBody,
+      borderDownColor: candleColors.downBody,
+      wickUpColor: candleColors.upWick,
+      wickDownColor: candleColors.downWick
+    });
+  }
+}
+
+function resetColors(){
+  $('upBody').value = '#26a69a';
+  $('upWick').value = '#26a69a';
+  $('downBody').value = '#ef5350';
+  $('downWick').value = '#ef5350';
+  applyCandleColors();
 }
 
 function resetZoom(){ if(chart) chart.timeScale().fitContent(); if(rsiChart) rsiChart.timeScale().fitContent(); }
@@ -436,15 +672,18 @@ function redraw(){
   ap('tMA50', 50, series.ma50);
   ap('tMA200', 200, series.ma200);
 
-  if($('tBB').checked && currentRatios.length > 20){ const bb = calcBB(currentRatios, 20, 2); series.bbU.setData(bb.upper); series.bbL.setData(bb.lower); }
-  else { series.bbU.setData([]); series.bbL.setData([]); }
+  if($('tZ').checked){
+    const z = calcZScoreBands(currentRatios, 2);
+    series.zUp.setData(z.upper);
+    series.zDn.setData(z.lower);
+  } else { series.zUp.setData([]); series.zDn.setData([]); }
 
-  if($('tMinMax').checked){
-    const st = calcStats(currentRatios);
-    const f = currentRatios[0].time, l = currentRatios[currentRatios.length-1].time;
-    series.maxL.setData([{time:f, value:st.max}, {time:l, value:st.max}]);
-    series.minL.setData([{time:f, value:st.min}, {time:l, value:st.min}]);
-  } else { series.maxL.setData([]); series.minL.setData([]); }
+  if($('tReg').checked){
+    const r = calcRegressionChannel(currentRatios);
+    series.regMid.setData(r.mid);
+    series.regUp.setData(r.up);
+    series.regDn.setData(r.dn);
+  } else { series.regMid.setData([]); series.regUp.setData([]); series.regDn.setData([]); }
 
   if($('tRSI').checked && rsiChart){
     const r = calcRSI(currentRatios, 14);
@@ -460,26 +699,23 @@ function setRange(days){
   currentRange = days;
   document.querySelectorAll('#tfBar .tf-btn').forEach(b => b.classList.toggle('active', +b.dataset.r === days));
   document.querySelectorAll('.tv-bottom .tf-btn').forEach(b => b.classList.toggle('active', +b.dataset.r === days));
-  if(!allRatios.length) return;
-  if(days === 0) currentRatios = allRatios.slice();
+  if(!allData.length) return;
+  if(days === 0) currentRatios = allData.slice();
   else {
-    const lastT = allRatios[allRatios.length-1].time;
+    const lastT = allData[allData.length-1].time;
     const minT = lastT - days * 86400;
-    currentRatios = allRatios.filter(r => r.time >= minT);
+    currentRatios = allData.filter(r => r.time >= minT);
   }
-  if(currentRatios.length) updateStatsAndSignal();
-  if(currentRatios.length) redraw();
+  if(currentRatios.length) { updateStats(); redraw(); }
 }
 
 document.querySelectorAll('#tfBar .tf-btn, .tv-bottom .tf-btn').forEach(b => {
-  if(b.dataset.r !== undefined){
-    b.addEventListener('click', () => setRange(+b.dataset.r));
-  }
+  if(b.dataset.r !== undefined) b.addEventListener('click', () => setRange(+b.dataset.r));
 });
 
-function updateStatsAndSignal(){
+function updateStats(){
   const st = calcStats(currentRatios);
-  const chg = ((st.current - currentRatios[0].value) / currentRatios[0].value * 100).toFixed(2);
+  const chg = ((st.current - currentRatios[0].close) / currentRatios[0].close * 100).toFixed(2);
   const s1 = $('symbol1').value, s2 = $('symbol2').value;
 
   $('legend').classList.add('show');
@@ -501,27 +737,53 @@ function updateStatsAndSignal(){
   $('sZ').innerText = st.zScore.toFixed(2);
   $('sPct').innerText = st.pct + '%';
 
+  // تحلیل پیشرفته
+  const hl = calcHalfLife(currentRatios);
+  if(hl){
+    $('sHalfLife').innerText = hl.halfLife === Infinity ? '∞ (روند)' : hl.halfLife.toFixed(1);
+    $('sBeta').innerText = hl.beta.toFixed(4);
+  }
+
+  const hurst = calcHurst(currentRatios);
+  if(hurst !== null){
+    let hLabel;
+    if(hurst > 0.55) hLabel = hurst.toFixed(3) + ' (روند)';
+    else if(hurst < 0.45) hLabel = hurst.toFixed(3) + ' (بازگشت)';
+    else hLabel = hurst.toFixed(3) + ' (تصادفی)';
+    $('sHurst').innerText = hLabel;
+  }
+
+  // همبستگی
+  const cb = calcCorrBeta(window._h1, window._h2);
+  if(cb.corr !== null){
+    $('sCorr').innerText = cb.corr.toFixed(3);
+    $('sCorr').className = 'v ' + (cb.corr > 0.5 ? 'green' : cb.corr < -0.5 ? 'red' : '');
+    $('sStockBeta').innerText = cb.beta.toFixed(3);
+  }
+
+  // سیگنال
   const sig = $('signalBox');
   sig.classList.add('show');
   let txt, cls;
   if(st.zScore > 2){ txt = '🔴 اشباع خرید | Z=' + st.zScore.toFixed(2); cls = 'sell'; }
   else if(st.zScore < -2){ txt = '🟢 اشباع فروش | Z=' + st.zScore.toFixed(2); cls = 'buy'; }
-  else if(st.zScore > 1){ txt = '🟠 بالاتر از میانگین | Z=' + st.zScore.toFixed(2); cls = 'neutral'; }
-  else if(st.zScore < -1){ txt = '🟡 پایین‌تر از میانگین | Z=' + st.zScore.toFixed(2); cls = 'neutral'; }
+  else if(st.zScore > 1){ txt = '🟠 بالاتر از میانگین'; cls = 'neutral'; }
+  else if(st.zScore < -1){ txt = '🟡 پایین‌تر از میانگین'; cls = 'neutral'; }
   else { txt = '⚪ نرمال | Z=' + st.zScore.toFixed(2); cls = 'neutral'; }
+
+  if(hurst !== null && hurst < 0.45 && hl && hl.halfLife < 100){
+    txt += ' | ✅ بازگشت به میانگین';
+    if(cls === 'neutral') cls = 'buy';
+  }
   sig.innerText = txt;
   sig.className = 'signal show ' + cls;
 }
 
-/* ============================================================
-   سیستم ابزار ترسیم
-   ============================================================ */
+/* ============ ابزار ترسیم ============ */
 let currentTool = 'cursor';
-let drawings = [];      // لیست اشیاء ترسیم‌شده
-let activeDraw = null;  // ترسیم در حال انجام
-let startPt = null;     // نقطه شروع
+let drawings = [];
+let activeDraw = null;
 
-// انتخاب ابزار
 document.querySelectorAll('.lb-btn[data-tool]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.lb-btn[data-tool]').forEach(b => b.classList.remove('active'));
@@ -529,55 +791,33 @@ document.querySelectorAll('.lb-btn[data-tool]').forEach(btn => {
     currentTool = btn.dataset.tool;
     $('toolStatus').innerText = 'ابزار: ' + btn.querySelector('.tip').innerText;
     const svg = $('drawSvg');
-    if(currentTool === 'cursor'){
-      svg.classList.remove('drawing');
-    } else {
-      svg.classList.add('drawing');
-    }
+    if(currentTool === 'cursor') svg.classList.remove('drawing');
+    else svg.classList.add('drawing');
   });
 });
 
-// تبدیل مختصات پیکسل به مختصات داده
 function px2data(x, y){
-  const chartEl = $('chart');
-  const rect = chartEl.getBoundingClientRect();
-  const relX = x - rect.left;
-  const relY = y - rect.top;
+  const rect = $('chart').getBoundingClientRect();
+  const relX = x - rect.left, relY = y - rect.top;
   const time = chart.timeScale().coordinateToTime(relX);
   const price = series.ratio.coordinateToPrice(relY);
   return { time, price };
 }
 function data2px(time, price){
-  const chartEl = $('chart');
-  const rect = chartEl.getBoundingClientRect();
   const x = chart.timeScale().timeToCoordinate(time);
   const y = series.ratio.priceToCoordinate(price);
   if(x === null || y === null) return null;
   return { x, y };
 }
 
-// شروع ترسیم
 $('drawSvg').addEventListener('mousedown', e => {
   if(currentTool === 'cursor' || !currentRatios.length) return;
   const pt = px2data(e.clientX, e.clientY);
   if(!pt.time || pt.price === null) return;
-  startPt = pt;
-
-  if(currentTool === 'hline'){
-    drawings.push({ type: 'hline', p1: pt });
-    redrawDrawings();
-    return;
-  }
-  if(currentTool === 'text'){
-    const txt = prompt('متن را وارد کنید:');
-    if(txt) drawings.push({ type: 'text', p1: pt, text: txt });
-    redrawDrawings();
-    return;
-  }
-  activeDraw = { type: currentTool, p1: pt, p2: pt };
+  if(currentTool === 'hline'){ drawings.push({type:'hline', p1:pt}); redrawDrawings(); return; }
+  if(currentTool === 'text'){ const t = prompt('متن:'); if(t) drawings.push({type:'text', p1:pt, text:t}); redrawDrawings(); return; }
+  activeDraw = {type: currentTool, p1: pt, p2: pt};
 });
-
-// ادامه ترسیم
 $('drawSvg').addEventListener('mousemove', e => {
   if(!activeDraw) return;
   const pt = px2data(e.clientX, e.clientY);
@@ -585,213 +825,157 @@ $('drawSvg').addEventListener('mousemove', e => {
   activeDraw.p2 = pt;
   redrawDrawings();
 });
-
-// پایان ترسیم
-$('drawSvg').addEventListener('mouseup', e => {
+$('drawSvg').addEventListener('mouseup', () => {
   if(!activeDraw) return;
   drawings.push(activeDraw);
   activeDraw = null;
   redrawDrawings();
 });
 
-// بازترسیم تمام اشیاء
 function redrawDrawings(){
   const svg = $('drawSvg');
   svg.innerHTML = '';
   if(!chart) return;
-
-  const chartEl = $('chart');
-  const rect = chartEl.getBoundingClientRect();
+  const rect = $('chart').getBoundingClientRect();
   svg.setAttribute('viewBox', '0 0 ' + rect.width + ' ' + rect.height);
   svg.style.width = rect.width + 'px';
   svg.style.height = rect.height + 'px';
 
   const all = activeDraw ? [...drawings, activeDraw] : drawings;
-  all.forEach((d, idx) => {
+  all.forEach(d => {
     const p1 = data2px(d.p1.time, d.p1.price);
     if(!p1) return;
 
     if(d.type === 'trend'){
       const p2 = data2px(d.p2.time, d.p2.price);
       if(!p2) return;
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', p1.x);
-      line.setAttribute('y1', p1.y);
-      line.setAttribute('x2', p2.x);
-      line.setAttribute('y2', p2.y);
-      line.setAttribute('stroke', '#2962FF');
-      line.setAttribute('stroke-width', '2');
-      svg.appendChild(line);
-      // نقاط
-      [p1, p2].forEach(p => {
-        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); c.setAttribute('r', '4');
-        c.setAttribute('fill', '#2962FF');
-        svg.appendChild(c);
-      });
-    }
-
-    else if(d.type === 'hline'){
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', '0');
-      line.setAttribute('y1', p1.y);
-      line.setAttribute('x2', rect.width);
-      line.setAttribute('y2', p1.y);
-      line.setAttribute('stroke', '#f7b600');
-      line.setAttribute('stroke-width', '1.5');
-      line.setAttribute('stroke-dasharray', '6,4');
-      svg.appendChild(line);
-      // برچسب قیمت
-      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      t.setAttribute('x', rect.width - 60);
-      t.setAttribute('y', p1.y - 5);
-      t.setAttribute('fill', '#f7b600');
-      t.setAttribute('font-size', '11');
-      t.setAttribute('font-family', 'monospace');
-      t.textContent = d.p1.price.toFixed(4);
-      svg.appendChild(t);
-    }
-
-    else if(d.type === 'rect'){
+      const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      l.setAttribute('x1', p1.x); l.setAttribute('y1', p1.y);
+      l.setAttribute('x2', p2.x); l.setAttribute('y2', p2.y);
+      l.setAttribute('stroke', '#2962FF'); l.setAttribute('stroke-width', '2');
+      svg.appendChild(l);
+    } else if(d.type === 'hline'){
+      const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      l.setAttribute('x1', '0'); l.setAttribute('y1', p1.y);
+      l.setAttribute('x2', rect.width); l.setAttribute('y2', p1.y);
+      l.setAttribute('stroke', '#f7b600'); l.setAttribute('stroke-width', '1.5');
+      l.setAttribute('stroke-dasharray', '6,4');
+      svg.appendChild(l);
+    } else if(d.type === 'rect'){
       const p2 = data2px(d.p2.time, d.p2.price);
       if(!p2) return;
       const x = Math.min(p1.x, p2.x), y = Math.min(p1.y, p2.y);
-      const w = Math.abs(p2.x - p1.x), h = Math.abs(p2.y - p1.y);
       const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
       r.setAttribute('x', x); r.setAttribute('y', y);
-      r.setAttribute('width', w); r.setAttribute('height', h);
+      r.setAttribute('width', Math.abs(p2.x - p1.x));
+      r.setAttribute('height', Math.abs(p2.y - p1.y));
       r.setAttribute('fill', 'rgba(38,166,154,0.15)');
       r.setAttribute('stroke', '#26a69a');
-      r.setAttribute('stroke-width', '1.5');
       svg.appendChild(r);
-    }
-
-    else if(d.type === 'fib'){
+    } else if(d.type === 'fib'){
       const p2 = data2px(d.p2.time, d.p2.price);
       if(!p2) return;
       const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
-      const colors = ['#787b86', '#ef5350', '#f7b600', '#26a69a', '#2962FF', '#9C27B0', '#787b86'];
+      const colors = ['#787b86','#ef5350','#f7b600','#26a69a','#2962FF','#9C27B0','#787b86'];
       const x1 = Math.min(p1.x, p2.x), x2 = Math.max(p1.x, p2.x);
       levels.forEach((lv, i) => {
         const y = p1.y + (p2.y - p1.y) * lv;
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', x1);
-        line.setAttribute('y1', y);
-        line.setAttribute('x2', x2);
-        line.setAttribute('y2', y);
-        line.setAttribute('stroke', colors[i]);
-        line.setAttribute('stroke-width', '1');
-        svg.appendChild(line);
+        const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        l.setAttribute('x1', x1); l.setAttribute('y1', y);
+        l.setAttribute('x2', x2); l.setAttribute('y2', y);
+        l.setAttribute('stroke', colors[i]); l.setAttribute('stroke-width', '1');
+        svg.appendChild(l);
         const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        t.setAttribute('x', x1 - 4);
-        t.setAttribute('y', y + 4);
-        t.setAttribute('fill', colors[i]);
-        t.setAttribute('font-size', '10');
-        t.setAttribute('text-anchor', 'end');
-        t.setAttribute('font-family', 'monospace');
-        t.textContent = (lv * 100).toFixed(1) + '%';
+        t.setAttribute('x', x1-4); t.setAttribute('y', y+4);
+        t.setAttribute('fill', colors[i]); t.setAttribute('font-size', '10');
+        t.setAttribute('text-anchor', 'end'); t.setAttribute('font-family', 'monospace');
+        t.textContent = (lv*100).toFixed(1) + '%';
         svg.appendChild(t);
       });
-    }
-
-    else if(d.type === 'text'){
+    } else if(d.type === 'text'){
       const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      t.setAttribute('x', p1.x);
-      t.setAttribute('y', p1.y);
-      t.setAttribute('fill', '#f7b020');
-      t.setAttribute('font-size', '14');
-      t.setAttribute('font-weight', 'bold');
-      t.setAttribute('font-family', 'Tahoma');
+      t.setAttribute('x', p1.x); t.setAttribute('y', p1.y);
+      t.setAttribute('fill', '#f7b600'); t.setAttribute('font-size', '14');
+      t.setAttribute('font-weight', 'bold'); t.setAttribute('font-family', 'Tahoma');
       t.textContent = d.text;
       svg.appendChild(t);
     }
   });
-
-  // پشتیبانی از کلیک راست برای حذف
-  svg.querySelectorAll('line, rect, text, circle').forEach(el => {
-    el.style.pointerEvents = 'auto';
-    el.style.cursor = 'pointer';
-    el.addEventListener('contextmenu', ev => {
-      ev.preventDefault();
-      const parent = ev.target.parentElement;
-      // پیدا کردن ایندکس ترسیم
-      const allEls = Array.from(svg.children);
-      // حذف کل گروه مربوط به این ترسیم سخت است، پس همه را پاک و بازسازی می‌کنیم با حذف یک مورد
-      // برای سادگی: حذف آخرین
-      undoLast();
-    });
-  });
 }
 
-function undoLast(){
-  if(!drawings.length) return;
-  drawings.pop();
-  redrawDrawings();
-}
-function clearAll(){
-  if(!drawings.length) return;
-  if(confirm('همه ترسیم‌ها پاک شوند؟')){
-    drawings = [];
-    redrawDrawings();
-  }
-}
+function undoLast(){ if(drawings.length){ drawings.pop(); redrawDrawings(); } }
+function clearAll(){ if(drawings.length && confirm('همه ترسیم‌ها پاک شوند؟')){ drawings = []; redrawDrawings(); } }
 
-/* ============================================================
-   تحلیل
-   ============================================================ */
+/* ============ تحلیل ============ */
 async function loadRatio(){
   const btn = $('goBtn');
   btn.disabled = true;
   $('loading').classList.remove('hide');
   $('loading').innerHTML = '<div class="spin"></div><div>در حال دریافت داده...</div>';
-  setStatus('⏳ در حال دریافت...');
+  setStatus('⏳ دریافت...');
 
   try {
     const s1 = $('symbol1').value.trim(), s2 = $('symbol2').value.trim();
     if(!s1 || !s2){ alert('هر دو نماد را وارد کنید'); btn.disabled = false; return; }
 
-    setStatus('دریافت شناسه نمادها...');
     const c1 = await getInsCode(s1), c2 = await getInsCode(s2);
-    if(!c1){ alert('نماد "' + s1 + '" پیدا نشد'); btn.disabled = false; return; }
-    if(!c2){ alert('نماد "' + s2 + '" پیدا نشد'); btn.disabled = false; return; }
+    if(!c1 || !c2){ alert('نماد پیدا نشد'); btn.disabled = false; return; }
 
-    setStatus('دریافت تاریخچه قیمت...');
     const h1 = await getHistory(c1), h2 = await getHistory(c2);
     if(!h1.length || !h2.length){ alert('داده خالی'); btn.disabled = false; return; }
 
+    window._h1 = h1; window._h2 = h2;
+
+    // ساخت نقشه‌های OHLC
     const m1 = {}, m2 = {};
-    h1.forEach(x => { const p = x.pClosing || x.pDrCotVal; if(p>0) m1[String(x.dEven)] = p; });
-    h2.forEach(x => { const p = x.pClosing || x.pDrCotVal; if(p>0) m2[String(x.dEven)] = p; });
+    h1.forEach(x => {
+      const c = x.pClosing || x.pDrCotVal;
+      const o = x.priceFirst || c;
+      const hi = x.pMax || Math.max(o, c);
+      const lo = x.pMin || Math.min(o, c);
+      if(c > 0) m1[String(x.dEven)] = {open:o, high:hi, low:lo, close:c};
+    });
+    h2.forEach(x => {
+      const c = x.pClosing || x.pDrCotVal;
+      const o = x.priceFirst || c;
+      const hi = x.pMax || Math.max(o, c);
+      const lo = x.pMin || Math.min(o, c);
+      if(c > 0) m2[String(x.dEven)] = {open:o, high:hi, low:lo, close:c};
+    });
 
     const dates = Object.keys(m1).filter(d => m2[d]).sort();
     const uq = {};
+    let prevClose = null;
     for(const d of dates){
       const ts = gregorianToTs(d);
       if(ts === null) continue;
-      uq[ts] = { time: ts, value: m1[d] / m2[d] };
+      const rOpen = prevClose !== null ? prevClose : m1[d].open / m2[d].open;
+      const rClose = m1[d].close / m2[d].close;
+      const rHigh = Math.max(rOpen, rClose, m1[d].high / m2[d].high);
+      const rLow = Math.min(rOpen, rClose, m1[d].low / m2[d].low);
+      uq[ts] = { time: ts, open: rOpen, high: rHigh, low: rLow, close: rClose };
+      prevClose = rClose;
     }
-    allRatios = Object.values(uq).sort((a,b) => a.time - b.time);
-    if(allRatios.length < 2){ alert('داده کافی نیست'); btn.disabled = false; return; }
+    allData = Object.values(uq).sort((a,b) => a.time - b.time);
+    if(allData.length < 2){ alert('داده کافی نیست'); btn.disabled = false; return; }
 
-    // پاک کردن ترسیم‌های قبلی (چون داده جدید است)
-    drawings = [];
-    activeDraw = null;
+    drawings = []; activeDraw = null;
 
-    if(currentRange === 0) currentRatios = allRatios.slice();
+    if(currentRange === 0) currentRatios = allData.slice();
     else {
-      const lastT = allRatios[allRatios.length-1].time;
-      currentRatios = allRatios.filter(r => r.time >= lastT - currentRange * 86400);
+      const lastT = allData[allData.length-1].time;
+      currentRatios = allData.filter(r => r.time >= lastT - currentRange * 86400);
     }
 
     $('loading').classList.add('hide');
     initCharts();
-    updateStatsAndSignal();
+    updateStats();
     redraw();
 
     $('statsPanel').classList.add('show');
     $('statsBtn').style.background = 'var(--panel2)';
 
-    setStatus('✅ ' + currentRatios.length.toLocaleString('fa-IR') + ' نقطه | Z=' + calcStats(currentRatios).zScore.toFixed(2));
+    setStatus('✅ ' + currentRatios.length.toLocaleString('fa-IR') + ' کندل');
 
     localStorage.setItem('s1', s1);
     localStorage.setItem('s2', s2);
@@ -806,9 +990,9 @@ async function loadRatio(){
 function exportCSV(){
   if(!currentRatios.length){ alert('ابتدا تحلیل کنید'); return; }
   const s1 = $('symbol1').value, s2 = $('symbol2').value;
-  let csv = 'date,ratio\n';
+  let csv = 'date,open,high,low,close\n';
   currentRatios.forEach(r => {
-    csv += new Date(r.time*1000).toISOString().split('T')[0] + ',' + r.value + '\n';
+    csv += new Date(r.time*1000).toISOString().split('T')[0] + ',' + r.open + ',' + r.high + ',' + r.low + ',' + r.close + '\n';
   });
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
